@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Commit Guidelines
+
+**IMPORTANT:** Never add "Co-Authored-By: Claude" or any mention of Claude in git commits. Keep all commit messages professional and human-authored.
+
 ## Project Overview
 
 **Latch** is a security-first OIDC authentication library for Next.js 15+ with native support for Azure Government clouds (GCC-High, DoD). It implements OAuth 2.0 with PKCE, stores refresh tokens in encrypted HttpOnly cookies, and provides two authentication modes:

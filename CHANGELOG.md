@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enhanced Direct Token Mode** (Week 9)
+  - Auto-refresh with configurable threshold (default: 5 minutes before expiry)
+  - Exponential backoff retry logic (1s → 2s → 4s → 8s with jitter)
+  - Page Visibility API support (pauses refresh when tab hidden)
+  - Token expiry tracking and stale token detection
+  - Configurable options (`autoRefresh`, `refreshThreshold`, `retryOnFailure`, `maxRetries`, `pauseWhenHidden`)
+  - 17 new unit tests for auto-refresh behavior
 - **Security Test Suite** (66 new tests)
   - CSRF protection tests (state parameter validation)
   - Cookie tampering detection (AES-GCM integrity)
@@ -20,14 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Codecov integration for coverage reports
 
 ### Changed
+- `useAccessToken` hook now returns `expiresAt` timestamp for token expiry tracking
 - Scope validation is now case-insensitive
 - Improved error messages with explicit `.com` vs `.us` hints
+- Vitest configured with jsdom environment for React component tests
 
 ### Fixed
 - esbuild vulnerability (moderate severity, CVE in dev dependency)
 
 ### Security
-- Test coverage increased from 43 to 109 tests (+153%)
+- Test coverage increased from 43 to 126 tests (+193%)
 - All attack scenarios now tested (CSRF, tampering, open redirect, scope escalation)
 
 ---
