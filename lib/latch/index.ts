@@ -9,5 +9,14 @@ export { LatchError } from './types';
 // Config
 export { getLatchConfig, getAzureEndpoints } from './config';
 
+// Error Handling
+export {
+  createLatchError,
+  formatErrorForLog,
+  isLatchError,
+  getUserSafeErrorMessage,
+  validateLatchConfig,
+} from './errors';
+
 // React
 export { LatchProvider, useLatch, LatchGuard, useAccessToken } from './react';

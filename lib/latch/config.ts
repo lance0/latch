@@ -1,7 +1,9 @@
-import { LatchConfig, LatchCloud, LatchError, AzureEndpoints } from './types';
+import { LatchConfig, LatchCloud, AzureEndpoints } from './types';
+import { validateLatchConfig, createLatchError } from './errors';
 
 /**
  * Get Latch configuration from environment variables
+ * Validates all required fields and provides helpful error messages
  */
 export function getLatchConfig(): LatchConfig {
   const clientId = process.env.LATCH_CLIENT_ID;
@@ -12,44 +14,39 @@ export function getLatchConfig(): LatchConfig {
   const cookieSecret = process.env.LATCH_COOKIE_SECRET;
   const debug = process.env.LATCH_DEBUG === 'true';
 
-  if (!clientId) {
-    throw new LatchError(
-      'LATCH_CLIENT_ID_MISSING',
-      'LATCH_CLIENT_ID environment variable is required'
-    );
-  }
-
-  if (!tenantId) {
-    throw new LatchError(
-      'LATCH_TENANT_ID_MISSING',
-      'LATCH_TENANT_ID environment variable is required'
-    );
-  }
-
-  if (!cloud || !['commercial', 'gcc-high', 'dod'].includes(cloud)) {
-    throw new LatchError(
-      'LATCH_CLOUD_INVALID',
-      'LATCH_CLOUD must be one of: commercial, gcc-high, dod'
-    );
-  }
-
-  if (!cookieSecret) {
-    throw new LatchError(
-      'LATCH_COOKIE_SECRET_MISSING',
-      'LATCH_COOKIE_SECRET environment variable is required. Generate with: openssl rand -base64 32'
-    );
-  }
-
-  return {
+  // Validate configuration with enhanced error messages
+  validateLatchConfig({
     clientId,
     tenantId,
     cloud,
+    cookieSecret,
+    scopes,
+  });
+
+  // TypeScript knows these are defined after validation
+  const validatedConfig = {
+    clientId: clientId!,
+    tenantId: tenantId!,
+    cloud: cloud as LatchCloud,
     scopes: scopes || ['openid', 'profile', 'User.Read'],
     redirectUri:
       redirectUri || `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/latch/callback`,
-    cookieSecret,
+    cookieSecret: cookieSecret!,
     debug,
   };
+
+  // Validate scopes match cloud environment
+  validateScopes(validatedConfig.scopes, validatedConfig.cloud);
+
+  // Debug logging
+  if (debug) {
+    console.log('[Latch] Configuration loaded successfully');
+    console.log(`[Latch] Cloud: ${validatedConfig.cloud}`);
+    console.log(`[Latch] Scopes: ${validatedConfig.scopes.join(' ')}`);
+    console.log(`[Latch] Redirect URI: ${validatedConfig.redirectUri}`);
+  }
+
+  return validatedConfig;
 }
 
 /**
@@ -97,17 +94,29 @@ export function validateScopes(scopes: string[], cloud: LatchCloud): void {
 
   // Check for commercial endpoints in Gov clouds
   if ((cloud === 'gcc-high' || cloud === 'dod') && scopeString.includes('graph.microsoft.com')) {
-    throw new LatchError(
+    throw createLatchError(
       'LATCH_CLOUD_MISMATCH',
-      `Cloud is set to '${cloud}' but scopes contain commercial Graph URL (.com). Use appropriate .us endpoints.`
+      `Cloud/Scope Mismatch: LATCH_CLOUD is set to '${cloud}' but scopes contain .com Graph URL\n\n` +
+      'Government clouds (gcc-high, dod) require .us endpoints.\n\n' +
+      'Fix by using simple scope names (recommended):\n' +
+      '  LATCH_SCOPES=openid profile User.Read\n\n' +
+      'Or use explicit .us URLs:\n' +
+      '  LATCH_SCOPES=openid profile https://graph.microsoft.us/User.Read\n\n' +
+      `Current scopes: ${scopes.join(' ')}`
     );
   }
 
   // Check for Gov endpoints in commercial cloud
   if (cloud === 'commercial' && scopeString.includes('graph.microsoft.us')) {
-    throw new LatchError(
+    throw createLatchError(
       'LATCH_CLOUD_MISMATCH',
-      `Cloud is set to 'commercial' but scopes contain Government Graph URL (.us). Use .com endpoints.`
+      `Cloud/Scope Mismatch: LATCH_CLOUD is set to 'commercial' but scopes contain .us Graph URL\n\n` +
+      'Commercial cloud requires .com endpoints.\n\n' +
+      'Fix by using simple scope names (recommended):\n' +
+      '  LATCH_SCOPES=openid profile User.Read\n\n' +
+      'Or use explicit .com URLs:\n' +
+      '  LATCH_SCOPES=openid profile https://graph.microsoft.com/User.Read\n\n' +
+      `Current scopes: ${scopes.join(' ')}`
     );
   }
 }

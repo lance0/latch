@@ -13,8 +13,7 @@ describe('Scope Escalation Protection', () => {
 
       for (const scope of commercialGraphScopes) {
         expect(() => validateScopes([scope], 'gcc-high')).toThrow(LatchError);
-        expect(() => validateScopes([scope], 'gcc-high')).toThrow('commercial Graph URL');
-        expect(() => validateScopes([scope], 'gcc-high')).toThrow('Cloud is set to');
+        expect(() => validateScopes([scope], 'gcc-high')).toThrow('Cloud/Scope Mismatch');
       }
     });
 
@@ -26,7 +25,7 @@ describe('Scope Escalation Protection', () => {
 
       for (const scope of commercialGraphScopes) {
         expect(() => validateScopes([scope], 'dod')).toThrow(LatchError);
-        expect(() => validateScopes([scope], 'dod')).toThrow('commercial Graph URL');
+        expect(() => validateScopes([scope], 'dod')).toThrow('Cloud/Scope Mismatch');
       }
     });
 
@@ -39,7 +38,7 @@ describe('Scope Escalation Protection', () => {
 
       for (const scope of govGraphScopes) {
         expect(() => validateScopes([scope], 'commercial')).toThrow(LatchError);
-        expect(() => validateScopes([scope], 'commercial')).toThrow('Government Graph URL');
+        expect(() => validateScopes([scope], 'commercial')).toThrow('Cloud/Scope Mismatch');
       }
     });
 

@@ -91,7 +91,6 @@ export function useAccessToken(options: UseAccessTokenOptions = {}): UseAccessTo
    */
   const getTimeUntilRefresh = useCallback((expiresAt: number): number => {
     const now = Date.now();
-    const expiresIn = expiresAt - now;
     const refreshAt = expiresAt - refreshThreshold * 1000;
     return Math.max(0, refreshAt - now);
   }, [refreshThreshold]);

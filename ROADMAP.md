@@ -106,7 +106,7 @@ Core authentication functionality for Next.js App Router with Azure Government c
 
 ## 🚧 v0.2 — Refinement & Direct Token Mode (Weeks 9-12)
 
-**Status:** 🏗️ In Progress (~45% complete)
+**Status:** 🏗️ In Progress (~75% complete)
 **Target:** TBD
 **Effort:** 10-15 hours/week
 
@@ -125,15 +125,17 @@ Enhancements for developer experience, better error handling, and testing improv
 - [x] Create 17 unit tests for auto-refresh behavior
 - [x] Document new features in JSDoc comments
 
-#### Week 10: DX Improvements & Session Management
-- [ ] Implement `/api/latch/session` route (already done, enhance)
-- [ ] Add background token refresh option
-- [ ] Improve error messages
-  - [ ] Add "Did you mean?" suggestions
-  - [ ] Link to docs for common errors
-  - [ ] Show example fixes
-- [ ] Enhance `returnTo` parameter support
-- [ ] Create troubleshooting guide (10+ scenarios)
+#### Week 10: DX Improvements & Session Management ✅
+- [x] Improve error messages
+  - [x] Add "Did you mean?" suggestions (Levenshtein distance)
+  - [x] Actionable error messages for all error codes
+  - [x] Step-by-step solutions and examples
+  - [x] UUID validation for Client/Tenant IDs
+  - [x] Weak secret detection
+- [x] Create troubleshooting guide (15+ scenarios in TROUBLESHOOTING.md)
+- [x] Add startup configuration validation (fail fast)
+- [x] Enhance debug logging with structured output
+- [x] Export error helper utilities (createLatchError, formatErrorForLog, etc.)
 
 #### Week 11: Testing & Security Hardening ✅
 - [x] Expand unit test coverage to >80%
@@ -151,7 +153,7 @@ Enhancements for developer experience, better error handling, and testing improv
 #### Week 12: Documentation & v0.2 Release
 - [ ] Write comprehensive guides
   - [ ] Secure Proxy vs Direct Token comparison
-  - [ ] Troubleshooting common issues
+  - [x] Troubleshooting common issues (TROUBLESHOOTING.md)
   - [ ] API reference with examples
 - [ ] Create `.env` templates for each cloud
 - [ ] Record demo video (optional)

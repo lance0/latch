@@ -64,14 +64,14 @@ describe('Config', () => {
       const scopes = ['https://graph.microsoft.com/User.Read'];
 
       expect(() => validateScopes(scopes, 'gcc-high')).toThrow(LatchError);
-      expect(() => validateScopes(scopes, 'gcc-high')).toThrow('Cloud is set to');
+      expect(() => validateScopes(scopes, 'gcc-high')).toThrow('Cloud/Scope Mismatch');
     });
 
     it('should throw when using .us Graph in commercial', () => {
       const scopes = ['https://graph.microsoft.us/User.Read'];
 
       expect(() => validateScopes(scopes, 'commercial')).toThrow(LatchError);
-      expect(() => validateScopes(scopes, 'commercial')).toThrow('Cloud is set to');
+      expect(() => validateScopes(scopes, 'commercial')).toThrow('Cloud/Scope Mismatch');
     });
 
     it('should throw when using .com Graph in DoD', () => {

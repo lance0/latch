@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Enhanced Error Messages & DX** (Week 10)
+  - Actionable error suggestions for all error codes
+  - "Did you mean?" suggestions using Levenshtein distance
+  - Startup configuration validation with detailed feedback
+  - UUID validation for Client ID and Tenant ID
+  - Weak secret detection in production
+  - Comprehensive troubleshooting guide (TROUBLESHOOTING.md)
+  - Structured debug logging with configuration summary
+  - User-safe error messages (sanitized, no tokens)
+  - Helper utilities: `createLatchError`, `formatErrorForLog`, `getUserSafeErrorMessage`
 - **Enhanced Direct Token Mode** (Week 9)
   - Auto-refresh with configurable threshold (default: 5 minutes before expiry)
   - Exponential backoff retry logic (1s → 2s → 4s → 8s with jitter)
@@ -15,21 +25,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Token expiry tracking and stale token detection
   - Configurable options (`autoRefresh`, `refreshThreshold`, `retryOnFailure`, `maxRetries`, `pauseWhenHidden`)
   - 17 new unit tests for auto-refresh behavior
-- **Security Test Suite** (66 new tests)
+- **Security Test Suite** (Week 11)
+  - 66 security tests added
   - CSRF protection tests (state parameter validation)
   - Cookie tampering detection (AES-GCM integrity)
   - Open redirect prevention (return URL validation)
   - Scope escalation prevention (cloud endpoint validation)
-- **CI/CD Infrastructure**
+- **CI/CD Infrastructure** (Week 11)
   - GitHub Actions workflow (lint, typecheck, test, build)
   - CodeQL security scanning (weekly + on PR)
   - Automated `pnpm audit` in CI pipeline
   - Codecov integration for coverage reports
 
 ### Changed
+- Error messages now include step-by-step solutions and examples
+- Configuration validation happens at startup (fail fast)
 - `useAccessToken` hook now returns `expiresAt` timestamp for token expiry tracking
 - Scope validation is now case-insensitive
-- Improved error messages with explicit `.com` vs `.us` hints
+- Debug mode shows configuration summary without exposing secrets
 - Vitest configured with jsdom environment for React component tests
 
 ### Fixed
@@ -38,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Test coverage increased from 43 to 126 tests (+193%)
 - All attack scenarios now tested (CSRF, tampering, open redirect, scope escalation)
+- Enhanced error messages never log tokens or secrets
 
 ---
 

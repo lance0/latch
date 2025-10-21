@@ -154,7 +154,7 @@ describe('Cookie Tampering Protection', () => {
 
       // Convert to buffer, flip some bits, convert back
       const bytes = Buffer.from(sealed, 'base64');
-      bytes[20] ^= 0xFF; // Flip all bits in byte 20
+      bytes[20]! ^= 0xFF; // Flip all bits in byte 20
       const bitFlipped = bytes.toString('base64');
 
       await expect(unseal(bitFlipped, secret)).rejects.toThrow(LatchError);
