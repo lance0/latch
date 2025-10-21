@@ -93,13 +93,13 @@ export function getAzureEndpoints(cloud: LatchCloud, tenantId: string): AzureEnd
  * Validate that scopes are appropriate for the cloud environment
  */
 export function validateScopes(scopes: string[], cloud: LatchCloud): void {
-  const scopeString = scopes.join(' ');
+  const scopeString = scopes.join(' ').toLowerCase();
 
   // Check for commercial endpoints in Gov clouds
   if ((cloud === 'gcc-high' || cloud === 'dod') && scopeString.includes('graph.microsoft.com')) {
     throw new LatchError(
       'LATCH_CLOUD_MISMATCH',
-      `Cloud is set to '${cloud}' but scopes contain commercial Graph URL. Use appropriate .us endpoints.`
+      `Cloud is set to '${cloud}' but scopes contain commercial Graph URL (.com). Use appropriate .us endpoints.`
     );
   }
 
