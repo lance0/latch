@@ -7,11 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for v0.2.0
-- Enhanced error handling with user-facing messages
-- Background token refresh
-- Better TypeScript type guards
-- Increased test coverage (>80%)
+### Added
+- **Security Test Suite** (66 new tests)
+  - CSRF protection tests (state parameter validation)
+  - Cookie tampering detection (AES-GCM integrity)
+  - Open redirect prevention (return URL validation)
+  - Scope escalation prevention (cloud endpoint validation)
+- **CI/CD Infrastructure**
+  - GitHub Actions workflow (lint, typecheck, test, build)
+  - CodeQL security scanning (weekly + on PR)
+  - Automated `pnpm audit` in CI pipeline
+  - Codecov integration for coverage reports
+
+### Changed
+- Scope validation is now case-insensitive
+- Improved error messages with explicit `.com` vs `.us` hints
+
+### Fixed
+- esbuild vulnerability (moderate severity, CVE in dev dependency)
+
+### Security
+- Test coverage increased from 43 to 109 tests (+153%)
+- All attack scenarios now tested (CSRF, tampering, open redirect, scope escalation)
 
 ---
 
