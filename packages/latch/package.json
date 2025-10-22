@@ -3,7 +3,16 @@
   "version": "0.3.0",
   "description": "Modern OIDC authentication for Next.js and secure clouds",
   "license": "Apache-2.0",
-  "author": "Lance",
+  "author": "lance0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lance0/latch.git",
+    "directory": "packages/latch"
+  },
+  "homepage": "https://github.com/lance0/latch#readme",
+  "bugs": {
+    "url": "https://github.com/lance0/latch/issues"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

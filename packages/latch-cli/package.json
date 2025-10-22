@@ -1,0 +1,50 @@
+{
+  "name": "@latch/cli",
+  "version": "0.3.0",
+  "description": "CLI tools for Latch authentication library",
+  "license": "Apache-2.0",
+  "author": "lance0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lance0/latch.git",
+    "directory": "packages/latch-cli"
+  },
+  "homepage": "https://github.com/lance0/latch#readme",
+  "bugs": {
+    "url": "https://github.com/lance0/latch/issues"
+  },
+  "type": "module",
+  "bin": {
+    "latch": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "prompts": "^2.4.2",
+    "chalk": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "keywords": [
+    "cli",
+    "latch",
+    "authentication",
+    "azure",
+    "oidc",
+    "generator"
+  ]
+}

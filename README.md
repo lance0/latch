@@ -11,7 +11,8 @@ This repository uses pnpm workspaces and Turborepo:
 ```
 latch/
 ├── packages/
-│   └── latch/          # @latch/core - Core authentication library
+│   ├── latch/          # @latch/core - Core authentication library
+│   └── latch-cli/      # @latch/cli - CLI tools (init wizard, secret generator)
 ├── apps/
 │   └── example-app/    # Example Next.js application
 ├── docs/               # Documentation
@@ -41,13 +42,35 @@ npm install @latch/core
 ### 2. Or Clone and Develop Locally
 
 ```bash
-git clone https://github.com/yourusername/latch.git
+git clone https://github.com/lance0/latch.git
 cd latch
 pnpm install
 pnpm build
 ```
 
-### 2. Configure environment variables
+### 2. Use CLI to Initialize (Recommended)
+
+The fastest way to get started is with the CLI wizard:
+
+```bash
+npx @latch/cli init
+```
+
+This will:
+- Prompt you for Azure AD credentials (Client ID, Tenant ID)
+- Select your cloud environment (Commercial, GCC-High, DoD)
+- Generate a secure cookie secret automatically
+- Create a `.env.local` file with all configuration
+
+**Or generate just a secret:**
+
+```bash
+npx @latch/cli generate-secret
+```
+
+See [@latch/cli documentation](./packages/latch-cli/README.md) for more details.
+
+### 3. Or Configure Manually
 
 Copy `.env.example` to `.env.local` and fill in your Azure AD configuration:
 
@@ -65,7 +88,7 @@ LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
 - `gcc-high` - Azure Government GCC-High (`login.microsoftonline.us`)
 - `dod` - Azure Government DoD (`login.microsoftonline.us` with DoD Graph)
 
-### 3. Wrap your app with LatchProvider
+### 4. Wrap your app with LatchProvider
 
 ```tsx
 import { LatchProvider } from '@latch/core/react';
@@ -81,7 +104,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-### 4. Use authentication in your components
+### 5. Use authentication in your components
 
 ```tsx
 'use client';
@@ -104,7 +127,7 @@ export default function Home() {
 }
 ```
 
-### 5. Protect routes
+### 6. Protect routes
 
 **Option A: Component-level protection**
 
