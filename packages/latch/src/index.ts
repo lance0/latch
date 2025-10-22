@@ -40,6 +40,3 @@ export {
   getUserSafeErrorMessage,
   validateLatchConfig,
 } from './errors';
-
-// React
-export { LatchProvider, useLatch, LatchGuard, useAccessToken } from './react';
