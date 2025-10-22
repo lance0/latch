@@ -1,19 +1,19 @@
 {
-  "name": "latch",
-  "version": "0.1.0",
-  "description": "Modern OIDC authentication for Next.js and secure clouds",
+  "name": "latch-monorepo",
+  "version": "0.3.0",
+  "description": "Modern OIDC authentication for Next.js and secure clouds - Monorepo",
   "private": true,
   "license": "Apache-2.0",
   "author": "Lance",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "test:ui": "turbo test:ui",
+    "test:coverage": "turbo test:coverage",
+    "clean": "turbo clean && rm -rf node_modules .turbo"
   },
   "dependencies": {
     "jose": "^5.9.6",
@@ -36,10 +36,13 @@
     "jsdom": "^27.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "tsup": "^8.5.0",
+    "turbo": "^2.5.8",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=18.17.0"
-  }
+  },
+  "packageManager": "pnpm@10.19.0"
 }

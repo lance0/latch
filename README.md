@@ -4,6 +4,20 @@
 
 Latch is a lightweight, security-minded authentication library for Next.js that implements OpenID Connect the right way — PKCE, refresh tokens, cookie sealing — and works in Azure Government clouds out of the box.
 
+## Monorepo Structure
+
+This repository uses pnpm workspaces and Turborepo:
+
+```
+latch/
+├── packages/
+│   └── latch/          # @latch/core - Core authentication library
+├── apps/
+│   └── example-app/    # Example Next.js application
+├── docs/               # Documentation
+└── ROADMAP.md         # Development roadmap
+```
+
 ## Features
 
 - ✅ **PKCE S256** (no client secrets needed)
@@ -14,12 +28,23 @@ Latch is a lightweight, security-minded authentication library for Next.js that 
 - ✅ **Audit-friendly** and transparent
 - ✅ **Two modes:** Secure Proxy (default) or Direct Token
 
-## Quick Start
+## Quick Start (Using the Package)
 
 ### 1. Install dependencies
 
 ```bash
+pnpm add @latch/core
+# or
+npm install @latch/core
+```
+
+### 2. Or Clone and Develop Locally
+
+```bash
+git clone https://github.com/yourusername/latch.git
+cd latch
 pnpm install
+pnpm build
 ```
 
 ### 2. Configure environment variables
@@ -42,10 +67,8 @@ LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
 
 ### 3. Wrap your app with LatchProvider
 
-The `LatchProvider` is already configured in `app/layout.tsx`:
-
 ```tsx
-import { LatchProvider } from '@/lib/latch';
+import { LatchProvider } from '@latch/core/react';
 
 export default function RootLayout({ children }) {
   return (
@@ -63,7 +86,7 @@ export default function RootLayout({ children }) {
 ```tsx
 'use client';
 
-import { useLatch } from '@/lib/latch';
+import { useLatch } from '@latch/core/react';
 
 export default function Home() {
   const { user, isAuthenticated, signIn, signOut } = useLatch();
@@ -86,7 +109,7 @@ export default function Home() {
 **Option A: Component-level protection**
 
 ```tsx
-import { LatchGuard } from '@/lib/latch';
+import { LatchGuard } from '@latch/core/react';
 
 export default function Dashboard() {
   return (
