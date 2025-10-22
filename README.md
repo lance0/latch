@@ -197,13 +197,43 @@ pnpm lint
 pnpm build
 ```
 
-## Security
+## Documentation
 
-See [SECURITY.md](./SECURITY.md) for security policies and vulnerability reporting.
+### 📚 Guides
 
-## Architecture
+- **[Authentication Modes](./docs/AUTHENTICATION_MODES.md)** - Complete comparison of Secure Proxy vs Direct Token modes
+  - Security trade-offs
+  - Performance comparison
+  - When to use each mode
+  - Migration guide
+  - Hybrid approach
 
-See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for technical implementation details.
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete API documentation
+  - All React hooks (`useLatch`, `useAccessToken`)
+  - Components (`LatchProvider`, `LatchGuard`)
+  - Configuration utilities
+  - Error handling
+  - Types reference
+
+- **[Troubleshooting](./TROUBLESHOOTING.md)** - Solutions to common issues
+  - Configuration errors
+  - OAuth flow problems
+  - Token issues
+  - Cloud-specific problems
+  - Debugging tips
+
+### ⚙️ Configuration Templates
+
+Cloud-specific `.env` templates with checklists:
+
+- **[`.env.commercial`](./.env.commercial)** - Azure Commercial Cloud
+- **[`.env.gcc-high`](./.env.gcc-high)** - Azure Government GCC-High (IL4)
+- **[`.env.dod`](./.env.dod)** - Azure Government DoD (IL5, FIPS required)
+
+### 🔐 Security & Architecture
+
+- **[SECURITY.md](./SECURITY.md)** - Security policies and vulnerability reporting
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical implementation details
 
 ## License
 

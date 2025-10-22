@@ -104,13 +104,13 @@ Core authentication functionality for Next.js App Router with Azure Government c
 
 ---
 
-## 🚧 v0.2 — Refinement & Direct Token Mode (Weeks 9-12)
+## ✅ v0.2 — Refinement & Direct Token Mode (Weeks 9-12)
 
-**Status:** 🏗️ In Progress (~75% complete)
-**Target:** TBD
-**Effort:** 10-15 hours/week
+**Status:** ✅ Complete
+**Completed:** 2025-10-22
+**Effort:** ~40 hours total
 
-Enhancements for developer experience, better error handling, and testing improvements.
+Enhancements for developer experience, better error handling, testing improvements, and comprehensive documentation.
 
 ### Week-by-Week Plan
 
@@ -150,15 +150,19 @@ Enhancements for developer experience, better error handling, and testing improv
 - [x] Run `pnpm audit` and fix vulnerabilities
 - [x] Add CodeQL GitHub Action
 
-#### Week 12: Documentation & v0.2 Release
-- [ ] Write comprehensive guides
-  - [ ] Secure Proxy vs Direct Token comparison
+#### Week 12: Documentation & v0.2 Release ✅
+- [x] Write comprehensive guides
+  - [x] Secure Proxy vs Direct Token comparison (docs/AUTHENTICATION_MODES.md)
   - [x] Troubleshooting common issues (TROUBLESHOOTING.md)
-  - [ ] API reference with examples
-- [ ] Create `.env` templates for each cloud
-- [ ] Record demo video (optional)
-- [ ] Tag `v0.2.0-beta`
-- [ ] Get feedback from 3+ testers
+  - [x] API reference with examples (docs/API_REFERENCE.md)
+- [x] Create `.env` templates for each cloud
+  - [x] .env.commercial (Azure Commercial)
+  - [x] .env.gcc-high (Azure Government GCC-High, IL4)
+  - [x] .env.dod (Azure Government DoD, IL5, FIPS)
+- [x] Update README with documentation links
+- [ ] Record demo video (optional - deferred)
+- [ ] Tag `v0.2.0-beta` (ready to tag)
+- [ ] Get feedback from 3+ testers (post-release)
 
 ### Planned Features
 

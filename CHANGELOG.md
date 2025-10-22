@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Comprehensive Documentation** (Week 12)
+  - Authentication Modes guide (Secure Proxy vs Direct Token comparison)
+  - Complete API reference with examples for all public APIs
+  - Cloud-specific `.env` templates (commercial, gcc-high, dod)
+  - Quick start checklists for each cloud environment
+  - Compliance notes for GCC-High (IL4) and DoD (IL5)
+  - FIPS mode instructions for DoD deployments
 - **Enhanced Error Messages & DX** (Week 10)
   - Actionable error suggestions for all error codes
   - "Did you mean?" suggestions using Levenshtein distance
@@ -38,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Codecov integration for coverage reports
 
 ### Changed
+- README updated with comprehensive documentation section
 - Error messages now include step-by-step solutions and examples
 - Configuration validation happens at startup (fail fast)
 - `useAccessToken` hook now returns `expiresAt` timestamp for token expiry tracking
