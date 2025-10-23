@@ -14,6 +14,23 @@ Complete reference for all Latch APIs, hooks, and utilities.
   - [getLatchConfig](#getlatchconfig)
   - [getAzureEndpoints](#getazureendpoints)
   - [validateLatchConfig](#validatelatchconfig)
+- [On-Behalf-Of (OBO) Flow](#on-behalf-of-obo-flow)
+  - [Core Functions](#core-functions)
+    - [exchangeTokenOnBehalfOf](#exchangetokenonbehalfof)
+  - [Helper Functions](#helper-functions)
+    - [oboTokenForGraph](#obotokenforgraph)
+    - [oboTokenForApi](#obotokenforapi)
+    - [oboTokenForFunction](#obotokenforfunction)
+  - [Token Validation](#token-validation)
+    - [validateAccessToken](#validateaccesstoken)
+    - [extractBearerToken](#extractbearertoken)
+    - [isTokenExpiringSoon](#istokenexpiringsoon)
+  - [CAE Helpers](#cae-continuous-access-evaluation-helpers)
+    - [parseCAEChallenge](#parsecaechallenge)
+    - [buildCAEChallengeHeader](#buildcaechallengeheader)
+    - [isCAEError](#iscaeerror)
+    - [extractClaimsFromError](#extractclaimsfromerror)
+    - [withCAERetry](#withcaeretry)
 - [Error Handling](#error-handling)
   - [LatchError](#latcherror)
   - [createLatchError](#createlatcherror)
@@ -463,6 +480,798 @@ try {
 
 ---
 
+## On-Behalf-Of (OBO) Flow
+
+For a complete guide on OBO scenarios, see [ON_BEHALF_OF_FLOW.md](./ON_BEHALF_OF_FLOW.md).
+
+### Core Functions
+
+#### `exchangeTokenOnBehalfOf`
+
+Exchange an incoming access token for a new token scoped to a different resource (middle-tier scenario).
+
+**Import:**
+```typescript
+import { exchangeTokenOnBehalfOf } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function exchangeTokenOnBehalfOf(
+  request: OBOTokenRequest
+): Promise<OBOTokenResponse>
+```
+
+**Parameters (OBOTokenRequest):**
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `userAssertion` | `string` | Yes | Incoming access token from client |
+| `clientId` | `string` | Yes | Your API's client ID |
+| `tenantId` | `string` | Yes | Azure AD tenant ID |
+| `cloud` | `LatchCloud` | Yes | Cloud environment |
+| `clientAuth` | `object` | Yes | Client secret or certificate |
+| `scopes` | `string[]` | Yes | Scopes for downstream resource |
+| `claims` | `string` | No | CAE claims challenge (if retrying) |
+| `allowedAudiences` | `string[]` | No | Additional valid audiences |
+| `requiredAzp` | `string` | No | Required authorized party (azp) |
+| `cacheOptions` | `TokenCacheOptions` | No | Cache configuration override |
+
+**Returns (OBOTokenResponse):**
+
+```typescript
+interface OBOTokenResponse {
+  access_token: string;      // Token for downstream resource
+  token_type: 'Bearer';
+  expires_in: number;        // Seconds until expiry
+  expires_at?: number;       // Unix timestamp
+  scope: string;             // Granted scopes
+  refresh_token?: string;    // Not typically returned for OBO
+}
+```
+
+**Example (Client Secret):**
+
+```typescript
+import { exchangeTokenOnBehalfOf } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  const bearerToken = request.headers.get('authorization')?.replace('Bearer ', '');
+
+  const oboResponse = await exchangeTokenOnBehalfOf({
+    userAssertion: bearerToken,
+    clientId: process.env.LATCH_CLIENT_ID!,
+    tenantId: process.env.LATCH_TENANT_ID!,
+    cloud: 'gcc-high',
+    clientAuth: {
+      clientSecret: process.env.LATCH_CLIENT_SECRET,
+    },
+    scopes: ['api://downstream/.default'],
+  });
+
+  // Use oboResponse.access_token to call downstream API
+  const downstreamResponse = await fetch('https://api.example.com/data', {
+    headers: { Authorization: `Bearer ${oboResponse.access_token}` }
+  });
+}
+```
+
+**Example (Certificate - IL4/IL5):**
+
+```typescript
+import { exchangeTokenOnBehalfOf } from '@latch/core';
+
+const oboResponse = await exchangeTokenOnBehalfOf({
+  userAssertion: bearerToken,
+  clientId: process.env.LATCH_CLIENT_ID!,
+  tenantId: process.env.LATCH_TENANT_ID!,
+  cloud: 'dod',
+  clientAuth: {
+    certificate: {
+      privateKey: process.env.LATCH_CERTIFICATE_PRIVATE_KEY!,
+      thumbprint: process.env.LATCH_CERTIFICATE_THUMBPRINT!,
+      x5c: process.env.LATCH_CERTIFICATE_X5C, // Optional
+    },
+  },
+  scopes: ['https://dod-graph.microsoft.us/.default'],
+});
+```
+
+**Example (With CAE Claims):**
+
+```typescript
+try {
+  const oboResponse = await exchangeTokenOnBehalfOf({
+    userAssertion: bearerToken,
+    // ... other params
+    claims: 'eyJhY2Nlc3NfdG9rZW4iOnsibmJmIjp7ImVzc2VudGlhbCI6dHJ1ZSwidmFsdWUiOiIxNzI...',
+  });
+} catch (error) {
+  if (error.code === 'LATCH_OBO_CAE_REQUIRED') {
+    // Return claims challenge to client
+    return NextResponse.json(
+      { error: 'claims_required', claims: error.details?.claims },
+      { status: 401 }
+    );
+  }
+}
+```
+
+**Throws:**
+- `LATCH_OBO_INVALID_ASSERTION` - Token validation failed
+- `LATCH_OBO_AUDIENCE_MISMATCH` - Token not for this API
+- `LATCH_OBO_ISSUER_MISMATCH` - Token from wrong cloud/tenant
+- `LATCH_OBO_EXCHANGE_FAILED` - Azure AD token exchange failed
+- `LATCH_OBO_CAE_REQUIRED` - Claims challenge required
+- `LATCH_OBO_MISSING_CLIENT_AUTH` - No client secret or certificate
+- `LATCH_OBO_CERT_INVALID` - Certificate malformed
+
+---
+
+### Helper Functions
+
+#### `oboTokenForGraph`
+
+Convenience wrapper for calling Microsoft Graph API via OBO.
+
+**Import:**
+```typescript
+import { oboTokenForGraph } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function oboTokenForGraph(
+  request: NextRequest,
+  options?: {
+    scopes?: string[];
+    claims?: string;
+  }
+): Promise<string>
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `request` | `NextRequest` | Next.js request with Authorization header |
+| `options.scopes` | `string[]` | Graph scopes (default: ['.default']) |
+| `options.claims` | `string` | CAE claims challenge |
+
+**Returns:** Access token string for Microsoft Graph
+
+**Example:**
+
+```typescript
+import { oboTokenForGraph, getAzureEndpoints, getLatchConfig } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  const config = getLatchConfig();
+  const endpoints = getAzureEndpoints(config.cloud, config.tenantId);
+
+  // Get token for Graph with specific scopes
+  const graphToken = await oboTokenForGraph(request, {
+    scopes: ['User.Read', 'Mail.Read'],
+  });
+
+  // Call Microsoft Graph
+  const graphResponse = await fetch(`${endpoints.graphBaseUrl}/v1.0/me/messages`, {
+    headers: { Authorization: `Bearer ${graphToken}` }
+  });
+
+  return NextResponse.json(await graphResponse.json());
+}
+```
+
+**Sovereign Cloud Support:**
+
+Automatically uses correct Graph endpoint:
+- Commercial: `https://graph.microsoft.com`
+- GCC-High: `https://graph.microsoft.us`
+- DoD: `https://dod-graph.microsoft.us`
+
+---
+
+#### `oboTokenForApi`
+
+Get OBO token for a custom downstream API.
+
+**Import:**
+```typescript
+import { oboTokenForApi } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function oboTokenForApi(
+  request: NextRequest,
+  options: {
+    audience: string;
+    scopes?: string[];
+    claims?: string;
+  }
+): Promise<string>
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `request` | `NextRequest` | Next.js request with Authorization header |
+| `options.audience` | `string` | Downstream API's App ID URI or client ID |
+| `options.scopes` | `string[]` | Scopes (default: ['audience/.default']) |
+| `options.claims` | `string` | CAE claims challenge |
+
+**Returns:** Access token string for downstream API
+
+**Example:**
+
+```typescript
+import { oboTokenForApi } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  // Get token for downstream API
+  const downstreamToken = await oboTokenForApi(request, {
+    audience: 'api://my-downstream-api',
+    scopes: ['api://my-downstream-api/.default'],
+  });
+
+  // Call downstream API
+  const downstreamResponse = await fetch('https://api.example.com/data', {
+    headers: { Authorization: `Bearer ${downstreamToken}` }
+  });
+
+  return NextResponse.json(await downstreamResponse.json());
+}
+```
+
+**Azure AD Setup:**
+
+1. Go to your API's App Registration → API permissions
+2. Add permission → My APIs → Select downstream API
+3. Choose delegated permissions
+4. Grant admin consent
+
+---
+
+#### `oboTokenForFunction`
+
+Get OBO token for an Azure Function with Easy Auth.
+
+**Import:**
+```typescript
+import { oboTokenForFunction } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function oboTokenForFunction(
+  request: NextRequest,
+  options: {
+    functionAppId: string;
+    scopes?: string[];
+    claims?: string;
+  }
+): Promise<string>
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `request` | `NextRequest` | Next.js request with Authorization header |
+| `options.functionAppId` | `string` | Function app's client ID or App ID URI |
+| `options.scopes` | `string[]` | Scopes (default: ['functionAppId/.default']) |
+| `options.claims` | `string` | CAE claims challenge |
+
+**Returns:** Access token string for Azure Function
+
+**Example:**
+
+```typescript
+import { oboTokenForFunction } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  const functionToken = await oboTokenForFunction(request, {
+    functionAppId: 'api://my-function-app',
+  });
+
+  const functionResponse = await fetch('https://my-func.azurewebsites.us/api/data', {
+    headers: {
+      Authorization: `Bearer ${functionToken}`,
+      'X-ZUMO-AUTH': functionToken, // For Easy Auth
+    }
+  });
+
+  return NextResponse.json(await functionResponse.json());
+}
+```
+
+**Easy Auth Notes:**
+
+- Easy Auth validates tokens with its own client ID, not your app registration
+- Use the Function App's client ID as `functionAppId`
+- See [ON_BEHALF_OF_FLOW.md](./ON_BEHALF_OF_FLOW.md#azure-functions-and-easy-auth) for setup
+
+---
+
+### Token Validation
+
+#### `validateAccessToken`
+
+Validate an incoming access token (verifies signature, audience, issuer, expiration).
+
+**Import:**
+```typescript
+import { validateAccessToken } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function validateAccessToken(
+  token: string,
+  expectedClientId: string,
+  expectedTenantId: string,
+  expectedCloud: LatchCloud,
+  options?: {
+    allowedAudiences?: string[];
+    requiredAzp?: string;
+  }
+): Promise<ValidatedAccessToken>
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `token` | `string` | Access token to validate |
+| `expectedClientId` | `string` | Your API's client ID |
+| `expectedTenantId` | `string` | Expected tenant ID |
+| `expectedCloud` | `LatchCloud` | Expected cloud environment |
+| `options.allowedAudiences` | `string[]` | Additional valid audiences |
+| `options.requiredAzp` | `string` | Required authorized party (prevents token forwarding) |
+
+**Returns (ValidatedAccessToken):**
+
+```typescript
+interface ValidatedAccessToken {
+  sub: string;              // User's object ID
+  oid: string;              // Object ID
+  tid: string;              // Tenant ID
+  aud: string;              // Audience
+  iss: string;              // Issuer
+  azp?: string;             // Authorized party
+  exp: number;              // Expiration timestamp
+  nbf: number;              // Not before timestamp
+  iat: number;              // Issued at timestamp
+  scp?: string;             // Scopes (space-separated)
+  roles?: string[];         // App roles
+  [key: string]: unknown;   // Additional claims
+}
+```
+
+**Example:**
+
+```typescript
+import { validateAccessToken, extractBearerToken } from '@latch/core';
+
+export async function POST(request: NextRequest) {
+  const token = extractBearerToken(request.headers.get('authorization'));
+
+  if (!token) {
+    return NextResponse.json({ error: 'No token' }, { status: 401 });
+  }
+
+  try {
+    const claims = await validateAccessToken(
+      token,
+      process.env.LATCH_CLIENT_ID!,
+      process.env.LATCH_TENANT_ID!,
+      'gcc-high',
+      {
+        allowedAudiences: ['api://my-api', process.env.LATCH_CLIENT_ID!],
+        requiredAzp: process.env.EXPECTED_CLIENT_ID, // Prevent token forwarding
+      }
+    );
+
+    console.log(`Authenticated as: ${claims.sub}`);
+    console.log(`Scopes: ${claims.scp}`);
+
+    // Process request with validated claims
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+  }
+}
+```
+
+**Throws:**
+- `LATCH_OBO_INVALID_ASSERTION` - Token signature invalid or expired
+- `LATCH_OBO_AUDIENCE_MISMATCH` - Token not for this API
+- `LATCH_OBO_ISSUER_MISMATCH` - Token from wrong cloud/tenant
+
+---
+
+#### `extractBearerToken`
+
+Extract bearer token from Authorization header.
+
+**Import:**
+```typescript
+import { extractBearerToken } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function extractBearerToken(authHeader: string | null): string | null
+```
+
+**Returns:** Token string or null if not a valid Bearer token
+
+**Example:**
+
+```typescript
+import { extractBearerToken } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  const token = extractBearerToken(request.headers.get('authorization'));
+
+  if (!token) {
+    return NextResponse.json({ error: 'Missing token' }, { status: 401 });
+  }
+
+  // Use token...
+}
+```
+
+**Handles:**
+- Missing header → `null`
+- Malformed header → `null`
+- Extra whitespace → Normalized
+- Valid `Bearer <token>` → `<token>`
+
+---
+
+#### `isTokenExpiringSoon`
+
+Check if token is expiring within a threshold.
+
+**Import:**
+```typescript
+import { isTokenExpiringSoon } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function isTokenExpiringSoon(
+  expiresAt: number,
+  bufferSeconds?: number
+): boolean
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `expiresAt` | `number` | required | Unix timestamp when token expires |
+| `bufferSeconds` | `number` | `300` | Seconds before expiry to consider "expiring soon" |
+
+**Returns:** `true` if token expires within buffer period
+
+**Example:**
+
+```typescript
+import { isTokenExpiringSoon } from '@latch/core';
+
+const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
+
+if (isTokenExpiringSoon(expiresAt, 300)) {
+  console.log('Token expires in less than 5 minutes, should refresh');
+}
+
+if (isTokenExpiringSoon(expiresAt, 600)) {
+  console.log('Token expires in less than 10 minutes');
+}
+```
+
+---
+
+### CAE (Continuous Access Evaluation) Helpers
+
+For detailed CAE handling patterns, see [ON_BEHALF_OF_FLOW.md](./ON_BEHALF_OF_FLOW.md#continuous-access-evaluation-cae).
+
+#### `parseCAEChallenge`
+
+Parse WWW-Authenticate header for CAE claims challenge.
+
+**Import:**
+```typescript
+import { parseCAEChallenge } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function parseCAEChallenge(
+  wwwAuthenticate: string | null
+): CAEChallenge | null
+```
+
+**Returns (CAEChallenge):**
+
+```typescript
+interface CAEChallenge {
+  claims: string;       // Base64-encoded claims JSON
+  error?: string;       // Error type (usually "insufficient_claims")
+  realm?: string;       // Realm (usually empty)
+}
+```
+
+**Example:**
+
+```typescript
+import { parseCAEChallenge, oboTokenForGraph } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  const graphToken = await oboTokenForGraph(request);
+
+  const graphResponse = await fetch('https://graph.microsoft.us/v1.0/me', {
+    headers: { Authorization: `Bearer ${graphToken}` }
+  });
+
+  if (graphResponse.status === 401) {
+    const challenge = parseCAEChallenge(
+      graphResponse.headers.get('www-authenticate')
+    );
+
+    if (challenge) {
+      // Retry OBO with claims
+      const newToken = await oboTokenForGraph(request, {
+        claims: challenge.claims,
+      });
+
+      // Retry Graph call with new token
+      const retryResponse = await fetch('https://graph.microsoft.us/v1.0/me', {
+        headers: { Authorization: `Bearer ${newToken}` }
+      });
+    }
+  }
+}
+```
+
+**Header Format:**
+
+```
+WWW-Authenticate: Bearer realm="", error="insufficient_claims", claims="eyJhY2Nlc3..."
+```
+
+Returns `null` if not a CAE challenge (no `claims` parameter).
+
+---
+
+#### `buildCAEChallengeHeader`
+
+Build WWW-Authenticate header for CAE challenge (to return to client).
+
+**Import:**
+```typescript
+import { buildCAEChallengeHeader } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function buildCAEChallengeHeader(
+  claims: string,
+  error?: string,
+  realm?: string
+): string
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `claims` | `string` | required | Claims string from Azure AD |
+| `error` | `string` | `'insufficient_claims'` | Error type |
+| `realm` | `string` | `''` | Realm |
+
+**Returns:** Formatted WWW-Authenticate header value
+
+**Example:**
+
+```typescript
+import { buildCAEChallengeHeader } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  try {
+    const token = await oboTokenForGraph(request);
+    // ... call Graph API
+  } catch (error: any) {
+    if (error.code === 'LATCH_OBO_CAE_REQUIRED') {
+      return NextResponse.json(
+        { error: 'claims_required', claims: error.details?.claims },
+        {
+          status: 401,
+          headers: {
+            'WWW-Authenticate': buildCAEChallengeHeader(error.details?.claims),
+          }
+        }
+      );
+    }
+  }
+}
+```
+
+**Output:**
+
+```
+Bearer realm="", error="insufficient_claims", claims="eyJhY2Nlc3..."
+```
+
+---
+
+#### `isCAEError`
+
+Check if error is CAE-related.
+
+**Import:**
+```typescript
+import { isCAEError } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function isCAEError(error: any): boolean
+```
+
+**Returns:** `true` if error is a CAE claims challenge
+
+**Example:**
+
+```typescript
+import { isCAEError, extractClaimsFromError } from '@latch/core';
+
+try {
+  const token = await oboTokenForGraph(request);
+  // ...
+} catch (error) {
+  if (isCAEError(error)) {
+    const claims = extractClaimsFromError(error);
+
+    return NextResponse.json(
+      { error: 'claims_required', claims },
+      { status: 401 }
+    );
+  }
+
+  throw error; // Other error
+}
+```
+
+**Detects:**
+- `error.code === 'LATCH_OBO_CAE_REQUIRED'`
+- `error.message` contains "insufficient_claims"
+- `error.message` contains "claims challenge"
+- `error.message` contains "interaction_required"
+
+---
+
+#### `extractClaimsFromError`
+
+Extract claims string from Latch OBO error.
+
+**Import:**
+```typescript
+import { extractClaimsFromError } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function extractClaimsFromError(error: any): string | null
+```
+
+**Returns:** Claims string or `null` if not a CAE error
+
+**Example:**
+
+```typescript
+import { extractClaimsFromError, buildCAEChallengeHeader } from '@latch/core';
+
+try {
+  const token = await oboTokenForGraph(request);
+} catch (error: any) {
+  const claims = extractClaimsFromError(error);
+
+  if (claims) {
+    // Return to client for retry
+    return NextResponse.json(
+      { error: 'claims_required', claims },
+      {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': buildCAEChallengeHeader(claims)
+        }
+      }
+    );
+  }
+}
+```
+
+---
+
+#### `withCAERetry`
+
+Execute operation with automatic CAE retry detection.
+
+**Import:**
+```typescript
+import { withCAERetry } from '@latch/core';
+```
+
+**Signature:**
+```typescript
+function withCAERetry<T>(
+  operation: () => Promise<T>,
+  config?: CAERetryConfig
+): Promise<T>
+```
+
+**Config (CAERetryConfig):**
+
+```typescript
+interface CAERetryConfig {
+  maxRetries?: number;          // Default: 1
+  throwOnFailure?: boolean;     // Default: true
+}
+```
+
+**Example:**
+
+```typescript
+import { withCAERetry, oboTokenForGraph, parseCAEChallenge } from '@latch/core';
+
+export async function GET(request: NextRequest) {
+  try {
+    const result = await withCAERetry(async () => {
+      const token = await oboTokenForGraph(request);
+
+      const response = await fetch('https://graph.microsoft.us/v1.0/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const challenge = parseCAEChallenge(
+          response.headers.get('www-authenticate')
+        );
+
+        if (challenge) {
+          throw new Error('CAE_CHALLENGE:' + challenge.claims);
+        }
+
+        throw new Error('API error');
+      }
+
+      return response.json();
+    });
+
+    return NextResponse.json(result);
+  } catch (error: any) {
+    if (isCAEError(error)) {
+      const claims = extractClaimsFromError(error);
+      return NextResponse.json(
+        { error: 'claims_required', claims },
+        { status: 401 }
+      );
+    }
+    throw error;
+  }
+}
+```
+
+**Important:**
+
+This helper detects and propagates CAE challenges. The client must handle the challenge and provide a new token with claims. The helper does NOT automatically retry with claims—it's for detection only.
+
+---
+
 ## Error Handling
 
 ### `LatchError`
@@ -780,25 +1589,44 @@ interface LatchUser {
 
 ```typescript
 type LatchErrorCode =
+  // Configuration
   | 'LATCH_CONFIG_MISSING'
   | 'LATCH_CLIENT_ID_MISSING'
   | 'LATCH_TENANT_ID_MISSING'
   | 'LATCH_CLOUD_INVALID'
   | 'LATCH_CLOUD_MISMATCH'
   | 'LATCH_COOKIE_SECRET_MISSING'
+
+  // PKCE Flow
   | 'LATCH_PKCE_MISSING'
   | 'LATCH_STATE_MISSING'
   | 'LATCH_STATE_MISMATCH'
   | 'LATCH_NONCE_MISSING'
   | 'LATCH_NONCE_MISMATCH'
   | 'LATCH_CODE_MISSING'
+
+  // Token Operations
   | 'LATCH_TOKEN_EXCHANGE_FAILED'
   | 'LATCH_TOKEN_REFRESH_FAILED'
+  | 'LATCH_REFRESH_TOKEN_MISSING'
+
+  // Validation
   | 'LATCH_INVALID_RETURN_URL'
   | 'LATCH_ID_TOKEN_INVALID'
-  | 'LATCH_REFRESH_TOKEN_MISSING'
+
+  // Encryption
   | 'LATCH_ENCRYPTION_FAILED'
-  | 'LATCH_DECRYPTION_FAILED';
+  | 'LATCH_DECRYPTION_FAILED'
+
+  // OBO Flow
+  | 'LATCH_OBO_INVALID_ASSERTION'      // Incoming token validation failed
+  | 'LATCH_OBO_AUDIENCE_MISMATCH'      // Token not for this API
+  | 'LATCH_OBO_ISSUER_MISMATCH'        // Token from wrong cloud/tenant
+  | 'LATCH_OBO_EXCHANGE_FAILED'        // Azure AD token exchange failed
+  | 'LATCH_OBO_CAE_REQUIRED'           // Claims challenge required
+  | 'LATCH_OBO_MISSING_CLIENT_AUTH'    // No client secret or certificate
+  | 'LATCH_OBO_CERT_INVALID'           // Certificate malformed
+  | 'LATCH_OBO_AZP_MISMATCH';          // Authorized party mismatch
 ```
 
 ### `LatchSession`
