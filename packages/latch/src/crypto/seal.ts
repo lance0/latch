@@ -106,20 +106,21 @@ async function deriveKey(secret: string): Promise<CryptoKey> {
 
 /**
  * Base64url encode (RFC 4648)
+ * Uses Buffer for Node.js compatibility (Next.js server runtime)
  */
 function base64UrlEncode(buffer: Uint8Array): string {
-  const base64 = btoa(String.fromCharCode(...buffer));
+  const base64 = Buffer.from(buffer).toString('base64');
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 /**
  * Base64url decode (RFC 4648)
+ * Uses Buffer for Node.js compatibility (Next.js server runtime)
  */
 function base64UrlDecode(str: string): Uint8Array {
   // Restore padding
   const pad = str.length % 4;
   const padded = str + (pad ? '='.repeat(4 - pad) : '');
   const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(base64);
-  return new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+  return Buffer.from(base64, 'base64');
 }

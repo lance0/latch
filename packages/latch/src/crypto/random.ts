@@ -27,8 +27,9 @@ function generateRandomString(length: number): string {
 
 /**
  * Base64url encode (RFC 4648)
+ * Uses Buffer for Node.js compatibility (Next.js server runtime)
  */
 function base64UrlEncode(buffer: Uint8Array): string {
-  const base64 = btoa(String.fromCharCode(...buffer));
+  const base64 = Buffer.from(buffer).toString('base64');
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
