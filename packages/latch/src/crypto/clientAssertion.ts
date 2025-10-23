@@ -32,7 +32,13 @@ export async function generateClientAssertion(
   const privateKey = await importPKCS8(certificate.privateKey, 'RS256');
 
   // Build JWT header with x5t (certificate thumbprint)
-  const header: Record<string, unknown> = {
+  const header: {
+    alg: 'RS256';
+    typ: 'JWT';
+    x5t: string;
+    kid?: string;
+    x5c?: string[];
+  } = {
     alg: 'RS256',
     typ: 'JWT',
     x5t: certificate.thumbprint, // SHA-1 thumbprint (base64url)

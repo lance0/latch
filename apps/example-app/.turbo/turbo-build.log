@@ -5,35 +5,18 @@
    ▲ Next.js 15.5.6
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 3.7s
+ ✓ Compiled successfully in 3.3s
    Linting and checking validity of types ...
-   Collecting page data ...
-   Generating static pages (0/11) ...
-   Generating static pages (2/11) 
-   Generating static pages (5/11) 
-   Generating static pages (8/11) 
- ✓ Generating static pages (11/11)
-   Finalizing page optimization ...
-   Collecting build traces ...
 
-Route (app)                                 Size  First Load JS
-┌ ○ /                                    1.73 kB         103 kB
-├ ○ /_not-found                            991 B         103 kB
-├ ƒ /api/latch/callback                    138 B         102 kB
-├ ƒ /api/latch/logout                      138 B         102 kB
-├ ƒ /api/latch/refresh                     138 B         102 kB
-├ ƒ /api/latch/session                     138 B         102 kB
-├ ƒ /api/latch/start                       138 B         102 kB
-├ ƒ /api/me                                138 B         102 kB
-└ ○ /dashboard                           1.86 kB         104 kB
-+ First Load JS shared by all             102 kB
-  ├ chunks/540-736a68c46984c5d9.js       45.5 kB
-  ├ chunks/bc7edd46-a5d8190def40b60b.js  54.2 kB
-  └ other shared chunks (total)           1.9 kB
+Failed to compile.
 
+./app/api/downstream-api/route.ts
+75:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-ƒ Middleware                             34.2 kB
+./app/api/graph-obo/route.ts
+77:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+162:19  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-○  (Static)   prerendered as static content
-ƒ  (Dynamic)  server-rendered on demand
-
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+ ELIFECYCLE  Command failed with exit code 1.

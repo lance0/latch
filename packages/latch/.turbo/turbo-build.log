@@ -4,12 +4,19 @@
 
 CLI Building entry: {"index":"src/index.ts"}
 CLI Using tsconfig: tsconfig.json
+CLI Building entry: {"obo/index":"src/obo/index.ts"}
+CLI Using tsconfig: tsconfig.json
 CLI Building entry: {"react/index":"src/react/index.ts"}
 CLI Using tsconfig: tsconfig.json
 CLI tsup v8.5.0
 CLI Using tsup config: /home/lance/latch/packages/latch/tsup.config.ts
 CLI tsup v8.5.0
 CLI Using tsup config: /home/lance/latch/packages/latch/tsup.config.ts
+CLI tsup v8.5.0
+CLI Using tsup config: /home/lance/latch/packages/latch/tsup.config.ts
+CLI Target: es2022
+ESM Build start
+CJS Build start
 CLI Target: es2022
 CLI Target: es2022
 ESM Build start
@@ -17,23 +24,33 @@ CJS Build start
 CLI Cleaning output folder
 ESM Build start
 CJS Build start
-CJS dist/react/index.cjs     7.43 KB
-CJS dist/react/index.cjs.map 18.62 KB
-CJS ⚡️ Build success in 240ms
 ESM dist/react/index.js     7.25 KB
 ESM dist/react/index.js.map 18.55 KB
-ESM ⚡️ Build success in 241ms
-ESM dist/index.js     23.62 KB
-ESM dist/index.js.map 52.17 KB
-ESM ⚡️ Build success in 238ms
-CJS dist/index.cjs     24.71 KB
-CJS dist/index.cjs.map 52.20 KB
-CJS ⚡️ Build success in 238ms
+ESM ⚡️ Build success in 369ms
+CJS dist/react/index.cjs     7.43 KB
+CJS dist/react/index.cjs.map 18.62 KB
+CJS ⚡️ Build success in 369ms
+CJS dist/obo/index.cjs     38.74 KB
+CJS dist/obo/index.cjs.map 103.53 KB
+CJS ⚡️ Build success in 382ms
+ESM dist/obo/index.js     38.37 KB
+ESM dist/obo/index.js.map 103.47 KB
+ESM ⚡️ Build success in 382ms
 DTS Build start
 DTS Build start
-DTS ⚡️ Build success in 1638ms
+DTS Build start
+CJS dist/index.cjs     48.32 KB
+CJS dist/index.cjs.map 123.11 KB
+CJS ⚡️ Build success in 522ms
+ESM dist/index.js     46.95 KB
+ESM dist/index.js.map 123.05 KB
+ESM ⚡️ Build success in 523ms
+DTS ⚡️ Build success in 1850ms
 DTS dist/react/index.d.ts  3.03 KB
 DTS dist/react/index.d.cts 3.03 KB
-DTS ⚡️ Build success in 1688ms
-DTS dist/index.d.ts  7.67 KB
-DTS dist/index.d.cts 7.67 KB
+DTS ⚡️ Build success in 2194ms
+DTS dist/obo/index.d.ts  20.38 KB
+DTS dist/obo/index.d.cts 20.38 KB
+DTS ⚡️ Build success in 2306ms
+DTS dist/index.d.ts  25.61 KB
+DTS dist/index.d.cts 25.61 KB

@@ -1,4 +1,4 @@
 
-> @latch/cli@0.3.0 typecheck /home/lance/latch/packages/latch-cli
+> @lance0/latch-cli@0.3.0 typecheck /home/lance/latch/packages/latch-cli
 > tsc --noEmit
 
