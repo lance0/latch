@@ -5,7 +5,7 @@ import {
   unseal,
   type LatchUser,
   type LatchSession,
-} from '@latch/core';
+} from '@lance0/latch';
 
 /**
  * GET /api/latch/session

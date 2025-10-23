@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { oboTokenForApi } from '@latch/core';
+import { oboTokenForApi } from '@lance0/latch';
 
 /**
  * Example: Call a custom downstream API using On-Behalf-Of (OBO) flow

@@ -13,7 +13,7 @@ import {
   validateReturnUrl,
   LatchError,
   type PKCEData,
-} from '@latch/core';
+} from '@lance0/latch';
 
 /**
  * GET /api/latch/start

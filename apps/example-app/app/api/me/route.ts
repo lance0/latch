@@ -6,7 +6,7 @@ import {
   unseal,
   refreshAccessToken,
   type RefreshTokenData,
-} from '@latch/core';
+} from '@lance0/latch';
 
 /**
  * GET /api/me

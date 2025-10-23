@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLatchConfig, getAzureEndpoints, COOKIE_NAMES } from '@latch/core';
+import { getLatchConfig, getAzureEndpoints, COOKIE_NAMES } from '@lance0/latch';
 
 /**
  * GET /api/latch/logout

@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@latch/core": "workspace:*",
+    "@lance0/latch": "workspace:*",
     "next": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

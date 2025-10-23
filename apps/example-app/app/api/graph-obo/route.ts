@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { oboTokenForGraph, getAzureEndpoints, getLatchConfig } from '@latch/core';
+import { oboTokenForGraph, getAzureEndpoints, getLatchConfig } from '@lance0/latch';
 
 /**
  * Example: Call Microsoft Graph API using On-Behalf-Of (OBO) flow

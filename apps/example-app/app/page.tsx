@@ -1,6 +1,6 @@
 'use client';
 
-import { useLatch } from '@latch/core/react';
+import { useLatch } from '@lance0/latch/react';
 
 export default function Home() {
   const { user, isAuthenticated, isLoading, signIn, signOut } = useLatch();

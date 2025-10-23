@@ -12,7 +12,7 @@ import {
   LatchError,
   type PKCEData,
   type RefreshTokenData,
-} from '@latch/core';
+} from '@lance0/latch';
 
 /**
  * GET /api/latch/callback

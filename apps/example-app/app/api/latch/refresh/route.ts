@@ -8,7 +8,7 @@ import {
   refreshAccessToken,
   LatchError,
   type RefreshTokenData,
-} from '@latch/core';
+} from '@lance0/latch';
 
 /**
  * POST /api/latch/refresh

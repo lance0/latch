@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { COOKIE_NAMES } from '@latch/core';
+import { COOKIE_NAMES } from '@lance0/latch';
 
 /**
  * Middleware for protecting routes

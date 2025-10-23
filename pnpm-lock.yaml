@@ -81,7 +81,7 @@ importers:
 
   apps/example-app:
     dependencies:
-      '@latch/core':
+      '@lance0/latch':
         specifier: workspace:*
         version: link:../../packages/latch
       next:

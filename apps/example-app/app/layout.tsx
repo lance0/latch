@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { LatchProvider } from '@latch/core/react';
+import { LatchProvider } from '@lance0/latch/react';
 
 export const metadata: Metadata = {
   title: 'Latch - Modern OIDC for Next.js',

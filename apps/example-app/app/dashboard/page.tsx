@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLatch, LatchGuard } from '@latch/core/react';
+import { useLatch, LatchGuard } from '@lance0/latch/react';
 
 interface UserProfile {
   displayName?: string;
