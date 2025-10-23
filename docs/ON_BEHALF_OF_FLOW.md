@@ -1,6 +1,18 @@
 # On-Behalf-Of (OBO) Flow
 
+> **⚠️ Status: Beta (v0.3.0+)** - OBO functionality is production-ready but considered opt-in until core PKCE flow is GA. Recommended import: `@lance0/latch/obo`
+
 The On-Behalf-Of (OBO) flow enables middle-tier APIs to call downstream APIs on behalf of an authenticated user. This document explains when to use OBO, how it works, and how to implement it securely with Latch.
+
+**Quick Start:**
+```typescript
+import { oboTokenForGraph } from '@lance0/latch/obo';
+
+export async function GET(request: NextRequest) {
+  const graphToken = await oboTokenForGraph(request);
+  // Use token to call Microsoft Graph...
+}
+```
 
 ## Table of Contents
 

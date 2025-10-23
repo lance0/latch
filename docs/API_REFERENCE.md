@@ -482,7 +482,18 @@ try {
 
 ## On-Behalf-Of (OBO) Flow
 
+> **⚠️ Status: Beta (v0.3.0+)** - OBO functionality is production-ready but considered opt-in until core PKCE flow is GA. Import from `@lance0/latch/obo` for a lean, tree-shakeable bundle.
+
 For a complete guide on OBO scenarios, see [ON_BEHALF_OF_FLOW.md](./ON_BEHALF_OF_FLOW.md).
+
+**Recommended Import:**
+```typescript
+// Opt-in subpath export (tree-shakeable)
+import { oboTokenForGraph, parseCAEChallenge } from '@lance0/latch/obo';
+
+// Also available from main export (for backwards compatibility)
+import { oboTokenForGraph } from '@lance0/latch';
+```
 
 ### Core Functions
 

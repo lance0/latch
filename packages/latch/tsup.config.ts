@@ -17,6 +17,20 @@ export default defineConfig((options): Options[] => [
     external: ['react', 'react-dom', 'next'],
     outDir: 'dist',
   },
+  // OBO subpath export (server-side only)
+  {
+    entry: {
+      'obo/index': 'src/obo/index.ts',
+    },
+    format: ['esm', 'cjs'],
+    dts: true,
+    sourcemap: true,
+    clean: false,
+    splitting: false,
+    treeshake: true,
+    external: ['react', 'react-dom', 'next'],
+    outDir: 'dist',
+  },
   // Client-side React code (needs 'use client' directive)
   {
     entry: {
