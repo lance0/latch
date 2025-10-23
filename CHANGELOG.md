@@ -10,10 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Monorepo Architecture**
   - Migrated to pnpm workspaces with Turborepo
-  - Split into `@latch/core` and `@latch/cli` packages
+  - Split into `@lance0/latch` and `@lance0/latch-cli` packages
   - Prepared for npm publication
   - Example app demonstrates real-world usage
-- **CLI Package (`@latch/cli`)**
+- **CLI Package (`@lance0/latch-cli`)**
   - Interactive setup wizard (`latch init`)
   - Secure secret generator (`latch generate-secret`)
   - Client type selection (Public PKCE vs Confidential client_secret)

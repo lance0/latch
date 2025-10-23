@@ -1,6 +1,6 @@
-# @latch/core
+# @lance0/latch
 
-[![npm version](https://badge.fury.io/js/@latch%2Fcore.svg)](https://www.npmjs.com/package/@latch/core)
+[![npm version](https://badge.fury.io/js/@lance0%2Flatch.svg)](https://www.npmjs.com/package/@lance0/latch)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 
@@ -22,11 +22,11 @@ Latch is a lightweight authentication library built specifically for Next.js App
 ## Installation
 
 ```bash
-pnpm add @latch/core
+pnpm add @lance0/latch
 # or
-npm install @latch/core
+npm install @lance0/latch
 # or
-yarn add @latch/core
+yarn add @lance0/latch
 ```
 
 ## Quick Start
@@ -34,7 +34,7 @@ yarn add @latch/core
 ### 1. Setup with CLI (Recommended)
 
 ```bash
-npx @latch/cli init
+npx @lance0/latch-cli init
 ```
 
 The interactive wizard will:
@@ -54,7 +54,7 @@ LATCH_CLIENT_ID=your-client-id
 LATCH_TENANT_ID=your-tenant-id
 LATCH_CLOUD=commercial  # or gcc-high, dod
 
-# Cookie Encryption (generate with: npx @latch/cli generate-secret)
+# Cookie Encryption (generate with: npx @lance0/latch-cli generate-secret)
 LATCH_COOKIE_SECRET=your-base64-secret-here
 
 # Optional: Confidential Client Mode
@@ -88,7 +88,7 @@ All crypto utilities (PKCE generation, cookie sealing, state/nonce) are exported
 Wrap your app in `app/layout.tsx`:
 
 ```tsx
-import { LatchProvider } from '@latch/core/react';
+import { LatchProvider } from '@lance0/latch/react';
 
 export default function RootLayout({ children }) {
   return (
@@ -108,7 +108,7 @@ export default function RootLayout({ children }) {
 ```tsx
 'use client';
 
-import { useLatch } from '@latch/core/react';
+import { useLatch } from '@lance0/latch/react';
 
 export default function Dashboard() {
   const { user, signIn, signOut, isLoading } = useLatch();
@@ -136,7 +136,7 @@ Create `middleware.ts`:
 ```tsx
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getLatchSession } from '@latch/core';
+import { getLatchSession } from '@lance0/latch';
 
 export async function middleware(request: NextRequest) {
   const session = await getLatchSession();
@@ -161,7 +161,7 @@ Access tokens stay on the server. All Graph API calls proxied through Next.js ro
 
 ```typescript
 // app/api/me/route.ts
-import { getAccessToken } from '@latch/core';
+import { getAccessToken } from '@lance0/latch';
 
 export async function GET() {
   const token = await getAccessToken();
@@ -185,7 +185,7 @@ Short-lived access tokens sent to client with auto-refresh. Only use for perform
 ```typescript
 'use client';
 
-import { useAccessToken } from '@latch/core/react';
+import { useAccessToken } from '@lance0/latch/react';
 
 export default function Profile() {
   const { accessToken, error, expiresAt } = useAccessToken({

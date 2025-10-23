@@ -1,5 +1,5 @@
 {
-  "name": "@latch/cli",
+  "name": "@lance0/latch-cli",
   "version": "0.3.0",
   "description": "CLI tools for Latch authentication library - generate secrets and interactive setup wizard",
   "license": "MIT",
