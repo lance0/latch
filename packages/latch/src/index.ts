@@ -19,6 +19,7 @@ export {
   getLatchConfig,
   getAzureEndpoints,
   validateScopes,
+  buildLogoutUrl,
   COOKIE_NAMES,
   COOKIE_OPTIONS,
 } from './config';

@@ -90,6 +90,39 @@ export function getAzureEndpoints(cloud: LatchCloud, tenantId: string): AzureEnd
 }
 
 /**
+ * Build Azure AD logout URL with post_logout_redirect_uri
+ *
+ * This signs the user out of Azure AD and redirects back to your application.
+ * Use this in your logout route to ensure the user's Azure AD session is cleared.
+ *
+ * @param cloud - Azure cloud environment
+ * @param tenantId - Azure AD tenant ID
+ * @param postLogoutRedirectUri - URL to redirect to after logout (typically your app's home page)
+ * @returns Complete logout URL to redirect the user to
+ *
+ * @example
+ * ```typescript
+ * // In your logout route
+ * const logoutUrl = buildLogoutUrl(
+ *   config.cloud,
+ *   config.tenantId,
+ *   'https://yourdomain.com'
+ * );
+ * return NextResponse.redirect(logoutUrl);
+ * ```
+ */
+export function buildLogoutUrl(
+  cloud: LatchCloud,
+  tenantId: string,
+  postLogoutRedirectUri: string
+): string {
+  const endpoints = getAzureEndpoints(cloud, tenantId);
+  const logoutUrl = new URL(endpoints.logoutUrl);
+  logoutUrl.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri);
+  return logoutUrl.toString();
+}
+
+/**
  * Validate that scopes are appropriate for the cloud environment
  */
 export function validateScopes(scopes: string[], cloud: LatchCloud): void {

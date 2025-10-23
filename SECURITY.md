@@ -61,6 +61,82 @@ To maintain transparency and audit-ability:
 - **No localStorage** - All sensitive data in HttpOnly cookies
 - **No session management** - Stateless; relies on Azure AD sessions
 
+## Compliance Considerations
+
+**Important:** Latch provides authentication patterns aligned with Azure Government security requirements, but **does not certify IL4/IL5 compliance**. Compliance is a system-wide concern that requires proper security controls, policies, and procedures across your entire application, infrastructure, and organization.
+
+### What Latch Provides
+
+Latch implements authentication security best practices suitable for government environments:
+
+- ✅ **Government cloud endpoint configuration** - Native support for GCC-High (IL4) and DoD (IL5)
+- ✅ **Secure token handling** - HttpOnly cookies, server-side storage, no localStorage
+- ✅ **Industry-standard cryptography** - AES-GCM-256 encryption, PKCE S256 flow (RFC 7636)
+- ✅ **OAuth 2.0 best practices** - State/nonce validation, secure redirects, scope validation
+- ✅ **Audit-friendly logging** - Structured debug logs with token redaction
+
+### Your Compliance Responsibilities
+
+Latch handles **authentication** (proving who the user is). You are responsible for:
+
+- **Authorization** - Implementing role-based access control (RBAC) and attribute-based access control (ABAC)
+- **FIPS 140-2 compliance** - Running Node.js with `--force-fips` flag if required (see FIPS section below)
+- **Audit logging** - Recording authentication events per your ATO requirements (login, logout, token refresh)
+- **Data residency** - Ensuring data stays within authorized regions (application data, not auth tokens)
+- **Network controls** - Firewalls, VPNs, private endpoints as required by your environment
+- **Security assessment** - Reviewing Latch's security model against your threat model
+- **Vulnerability management** - Monitoring for security updates and applying patches
+- **Configuration security** - Protecting `LATCH_COOKIE_SECRET` and other secrets
+
+### FIPS 140-2 Support
+
+For DoD IL5 and some IL4 environments, FIPS-validated cryptography is required:
+
+**How to enable FIPS mode:**
+```bash
+node --force-fips your-app.js
+```
+
+**What this does:**
+- Forces Node.js to use OpenSSL's FIPS-validated module
+- Latch's AES-GCM, SHA-256, and PBKDF2 operations will use FIPS implementations
+- Requires OpenSSL compiled with FIPS support in your environment
+
+**Testing FIPS mode:**
+```bash
+node --force-fips -e "console.log(require('crypto').getFips())"
+# Should output: 1
+```
+
+**Note:** FIPS compliance requires a FIPS-validated OpenSSL module in your environment (Azure App Service, Azure Container Apps, or custom Docker image with FIPS OpenSSL).
+
+### IL4/IL5 Guidance
+
+If deploying to GCC-High (IL4) or DoD (IL5) environments:
+
+1. **Use correct cloud configuration:**
+   ```bash
+   LATCH_CLOUD=gcc-high  # or dod
+   ```
+
+2. **Ensure Azure AD tenant is in government cloud** - Register apps at portal.azure.us, not portal.azure.com
+
+3. **Review data flow** - Tokens flow between your app and Azure AD's government endpoints only
+
+4. **Document authentication architecture** - Include Latch's security model in your SSP (System Security Plan)
+
+5. **Security assessment** - Have your security team review the threat model and security features documented in this file
+
+6. **Ongoing maintenance** - Subscribe to security advisories and apply updates promptly
+
+### Compliance Resources
+
+- [Azure Government Compliance](https://learn.microsoft.com/en-us/azure/compliance/)
+- [NIST 800-53 Controls](https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final)
+- [FedRAMP Security Controls](https://www.fedramp.gov/documents/)
+
+**Latch is a building block, not a complete compliance solution.** Consult your security team and compliance officers to ensure your complete system meets your authorization requirements.
+
 ## Reporting a Vulnerability
 
 **DO NOT** open a public GitHub issue for security vulnerabilities.
@@ -144,4 +220,4 @@ _(None yet — be the first!)_
 
 ---
 
-**Last updated:** 2025-10-21
+**Last updated:** 2025-10-23

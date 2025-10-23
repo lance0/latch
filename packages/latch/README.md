@@ -212,6 +212,56 @@ Latch automatically configures endpoints based on `LATCH_CLOUD`:
 
 No manual URL configuration needed - scopes are automatically validated against the selected cloud.
 
+## Compliance Considerations
+
+**Important:** Latch provides authentication patterns aligned with Azure Government security requirements, but **does not certify IL4/IL5 compliance**. Compliance is a system-wide concern requiring proper controls across your entire application and infrastructure.
+
+**What Latch provides:**
+- ✅ Government cloud endpoint configuration (GCC-High, DoD)
+- ✅ Secure token handling (HttpOnly cookies, server-side storage)
+- ✅ PKCE S256 flow per OAuth 2.0 best practices (RFC 7636)
+- ✅ AES-GCM-256 encryption for cookie data
+- ✅ Audit-friendly debug logging (tokens redacted)
+
+**Your responsibility:**
+- Run in FIPS-enabled environment if required (`node --force-fips`)
+- Implement proper authorization (Latch only handles authentication)
+- Configure audit logging per your ATO requirements
+- Review and approve the security model for your threat model
+- Ensure data residency and network controls meet your compliance needs
+
+See [SECURITY.md](../../SECURITY.md) for detailed security practices.
+
+## Runtime Requirements
+
+**Latch requires Node.js runtime** and is **not compatible with Edge Runtime**.
+
+**Why Node.js only:**
+- Cookie encryption uses Node.js `crypto` module
+- JWKS verification via `jose` library requires Node.js APIs
+- Server-side token storage requires full Node.js environment
+
+**Supported environments:**
+- ✅ Next.js App Router (Node runtime)
+- ✅ Vercel (Node.js serverless functions)
+- ✅ Azure App Service (Linux/Windows)
+- ✅ Docker containers
+- ✅ Any Node.js 18.17+ environment
+
+**Not supported:**
+- ❌ Edge Runtime (Vercel Edge, Cloudflare Workers)
+- ❌ Middleware running on Edge
+
+**FIPS 140-2 Support:**
+
+Run Node.js with `--force-fips` flag to enable FIPS-validated cryptography. Requires OpenSSL FIPS module in your environment. Latch's AES-GCM and SHA-256 operations will use FIPS-validated implementations.
+
+**Tested with:**
+- Node.js 18.17+ (LTS)
+- Node.js 20.0+ (LTS)
+- Azure App Service (Linux)
+- Azure Container Apps
+
 ## Documentation
 
 - [API Reference](../../docs/API_REFERENCE.md) - Complete API documentation
