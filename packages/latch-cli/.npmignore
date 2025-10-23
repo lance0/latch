@@ -1,0 +1,14 @@
+# Source files
+src/
+
+# Config files
+tsconfig.json
+tsup.config.ts
+
+# Build artifacts
+.turbo/
+*.log
+
+# Development
+node_modules/
+*.tsbuildinfo

@@ -1,8 +1,8 @@
 {
   "name": "@latch/cli",
   "version": "0.3.0",
-  "description": "CLI tools for Latch authentication library",
-  "license": "Apache-2.0",
+  "description": "CLI tools for Latch authentication library - generate secrets and interactive setup wizard",
+  "license": "MIT",
   "author": "lance0",
   "repository": {
     "type": "git",
@@ -19,7 +19,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",
@@ -43,8 +44,18 @@
     "cli",
     "latch",
     "authentication",
+    "auth",
     "azure",
+    "azure-ad",
+    "entra",
     "oidc",
-    "generator"
+    "oauth2",
+    "generator",
+    "wizard",
+    "setup",
+    "nextjs",
+    "gcc-high",
+    "dod",
+    "government"
   ]
 }

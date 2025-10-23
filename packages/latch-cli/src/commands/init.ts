@@ -89,7 +89,7 @@ export async function init(): Promise<void> {
         validate: isValidUUID,
       },
       {
-        type: (prev, values) => values.clientType === 'confidential' ? 'password' : null,
+        type: (_prev, values) => values.clientType === 'confidential' ? 'password' : null,
         name: 'clientSecret',
         message: 'Azure AD Client Secret (from Certificates & secrets):',
         validate: (value) => value ? true : 'Client secret is required for confidential clients',

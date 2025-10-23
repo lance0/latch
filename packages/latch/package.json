@@ -1,8 +1,8 @@
 {
   "name": "@latch/core",
   "version": "0.3.0",
-  "description": "Modern OIDC authentication for Next.js and secure clouds",
-  "license": "Apache-2.0",
+  "description": "Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support",
+  "license": "MIT",
   "author": "lance0",
   "repository": {
     "type": "git",
@@ -60,14 +60,25 @@
   },
   "keywords": [
     "nextjs",
+    "next15",
     "authentication",
+    "auth",
     "oidc",
+    "oauth2",
     "azure",
+    "azure-ad",
+    "entra",
+    "microsoft",
     "azure-government",
     "gcc-high",
     "dod",
-    "oauth2",
+    "il4",
+    "il5",
     "pkce",
-    "security"
+    "client-secret",
+    "confidential-client",
+    "security",
+    "government",
+    "compliance"
   ]
 }

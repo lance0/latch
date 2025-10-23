@@ -5,9 +5,28 @@ All notable changes to Latch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2025-10-23
 
 ### Added
+- **Monorepo Architecture**
+  - Migrated to pnpm workspaces with Turborepo
+  - Split into `@latch/core` and `@latch/cli` packages
+  - Prepared for npm publication
+  - Example app demonstrates real-world usage
+- **CLI Package (`@latch/cli`)**
+  - Interactive setup wizard (`latch init`)
+  - Secure secret generator (`latch generate-secret`)
+  - Client type selection (Public PKCE vs Confidential client_secret)
+  - Azure AD app registration guidance
+  - Automatic `.env.local` generation
+- **Dual Authentication Modes**
+  - Optional client secret support for confidential clients
+  - PKCE-only mode for public clients (SPAs, mobile apps)
+  - Client secret + PKCE hybrid mode (Web apps)
+  - Automatic mode detection from environment variables
+  - Comprehensive authentication setup guide (AUTHENTICATION_SETUP.md)
+  - Zero-downtime client secret rotation procedures
+  - 9 new token exchange tests
 - **Comprehensive Documentation** (Week 12)
   - Authentication Modes guide (Secure Proxy vs Direct Token comparison)
   - Complete API reference with examples for all public APIs
@@ -52,14 +71,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Scope validation is now case-insensitive
 - Debug mode shows configuration summary without exposing secrets
 - Vitest configured with jsdom environment for React component tests
+- Token exchange functions now accept optional `clientSecret` parameter
+- API routes updated to support dual authentication modes
+- CLI wizard provides tailored setup instructions based on client type
 
 ### Fixed
 - esbuild vulnerability (moderate severity, CVE in dev dependency)
+- TypeScript strict mode error: unused `prev` parameter in CLI prompts
 
 ### Security
-- Test coverage increased from 43 to 126 tests (+193%)
+- Test coverage increased from 43 to 135 tests (+214%)
 - All attack scenarios now tested (CSRF, tampering, open redirect, scope escalation)
 - Enhanced error messages never log tokens or secrets
+- Client secrets optional - PKCE mode requires no secrets at all
+- Rotation procedures documented for confidential client deployments
 
 ---
 
@@ -166,5 +191,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Comparison
 
-[Unreleased]: https://github.com/yourusername/latch/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/yourusername/latch/releases/tag/v0.1.0
+[0.3.0]: https://github.com/lance0/latch/compare/v0.1.0...v0.3.0
+[0.1.0]: https://github.com/lance0/latch/releases/tag/v0.1.0

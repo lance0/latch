@@ -1,18 +1,23 @@
 # @latch/core
 
-**Modern OIDC authentication for Next.js and secure clouds**
+[![npm version](https://badge.fury.io/js/@latch%2Fcore.svg)](https://www.npmjs.com/package/@latch/core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 
-Latch is a lightweight, security-minded authentication library for Next.js that implements OpenID Connect the right way — PKCE, refresh tokens, cookie sealing — and works in Azure Government clouds out of the box.
+**Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support**
+
+Latch is a lightweight authentication library built specifically for Next.js App Router with first-class support for Azure Government clouds (GCC-High, DoD). Implements PKCE S256, encrypted HttpOnly cookies, and provides both Secure Proxy and Direct Token modes.
 
 ## Features
 
-- ✅ **PKCE S256** (no client secrets needed)
-- ✅ **HttpOnly encrypted cookies** (AES-GCM)
-- ✅ **Azure Government cloud support** (GCC-High, DoD)
-- ✅ **Next.js 15 App Router** native
-- ✅ **TypeScript-first** with full IntelliSense
-- ✅ **Audit-friendly** and transparent
-- ✅ **Two modes:** Secure Proxy (default) or Direct Token
+- ✅ **Azure Government Ready** - Native GCC-High (IL4) and DoD (IL5) support
+- ✅ **Next.js 15+ Optimized** - Built for App Router with React Server Components
+- ✅ **Security First** - PKCE S256, AES-GCM cookies, CSRF protection, open redirect prevention
+- ✅ **Dual Auth Modes** - PKCE-only (public) or client_secret (confidential)
+- ✅ **Zero-Downtime Rotation** - Client secret rotation procedures included
+- ✅ **Type Safe** - Full TypeScript strict mode with IntelliSense
+- ✅ **Lightweight** - 61KB package, only depends on `jose`
+- ✅ **Battle Tested** - 135 unit tests including security attack scenarios
 
 ## Installation
 
@@ -26,187 +31,204 @@ yarn add @latch/core
 
 ## Quick Start
 
-### 1. Configure environment variables
+### 1. Setup with CLI (Recommended)
 
-Create a `.env.local` file:
+```bash
+npx @latch/cli init
+```
+
+The interactive wizard will:
+- Prompt for Azure AD configuration (Client ID, Tenant ID, Cloud)
+- Choose authentication mode (PKCE vs client_secret)
+- Generate secure cookie secret
+- Create `.env.local` with all required variables
+- Provide tailored Azure AD app registration instructions
+
+### 2. Manual Setup (Alternative)
+
+Create `.env.local`:
 
 ```env
+# Azure AD Configuration
 LATCH_CLIENT_ID=your-client-id
 LATCH_TENANT_ID=your-tenant-id
-LATCH_CLOUD=gcc-high
-LATCH_SCOPES=openid profile User.Read
-LATCH_REDIRECT_URI=http://localhost:3000/api/latch/callback
-LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
+LATCH_CLOUD=commercial  # or gcc-high, dod
+
+# Cookie Encryption (generate with: npx @latch/cli generate-secret)
+LATCH_COOKIE_SECRET=your-base64-secret-here
+
+# Optional: Confidential Client Mode
+# LATCH_CLIENT_SECRET=your-client-secret
+
+# Optional: Custom Configuration
+# LATCH_SCOPES=openid profile User.Read
+# LATCH_REDIRECT_URI=http://localhost:3000/api/latch/callback
 ```
 
-**Cloud options:**
+**Cloud Options:**
 - `commercial` - Azure Commercial (`login.microsoftonline.com`)
-- `gcc-high` - Azure Government GCC-High (`login.microsoftonline.us`)
-- `dod` - Azure Government DoD (`login.microsoftonline.us` with DoD Graph)
+- `gcc-high` - GCC-High IL4 (`login.microsoftonline.us`)
+- `dod` - DoD IL5 (`login.microsoftonline.us` with DoD Graph)
 
-### 2. Create API routes
+### 3. Create API Routes
 
-Latch requires these API routes in your Next.js app:
+Create OAuth endpoints in your Next.js app. You can either copy the route handlers from the example app or implement them yourself.
 
-```typescript
-// app/api/latch/start/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import {
-  getLatchConfig,
-  getAzureEndpoints,
-  validateScopes,
-  COOKIE_NAMES,
-  COOKIE_OPTIONS,
-  generateCodeVerifier,
-  generateCodeChallenge,
-  generateState,
-  generateNonce,
-  seal,
-  validateReturnUrl,
-  LatchError,
-  type PKCEData,
-} from '@latch/core';
+See the [example-app](../../apps/example-app/app/api/latch) for complete reference implementations of:
+- `GET /api/latch/start` - Initiates OAuth flow with PKCE
+- `GET /api/latch/callback` - Handles OAuth callback
+- `GET /api/latch/session` - Returns current user
+- `POST /api/latch/refresh` - Refreshes access token
+- `GET /api/latch/logout` - Clears session
 
-export async function GET(request: NextRequest) {
-  const config = getLatchConfig();
-  const endpoints = getAzureEndpoints(config.cloud, config.tenantId);
+All crypto utilities (PKCE generation, cookie sealing, state/nonce) are exported from `@latch/core`.
 
-  // Generate PKCE parameters
-  const codeVerifier = generateCodeVerifier();
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-  const state = generateState();
-  const nonce = generateNonce();
+### 4. Add React Provider
 
-  // Store PKCE data
-  const pkceData: PKCEData = { codeVerifier, state, nonce, returnTo: '/' };
-  const sealedPkce = await seal(pkceData, config.cookieSecret!);
-
-  // Build authorization URL
-  const authUrl = new URL(endpoints.authorizeUrl);
-  authUrl.searchParams.set('client_id', config.clientId);
-  authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('redirect_uri', config.redirectUri!);
-  authUrl.searchParams.set('scope', config.scopes?.join(' ') || '');
-  authUrl.searchParams.set('state', state);
-  authUrl.searchParams.set('nonce', nonce);
-  authUrl.searchParams.set('code_challenge', codeChallenge);
-  authUrl.searchParams.set('code_challenge_method', 'S256');
-
-  const response = NextResponse.redirect(authUrl.toString());
-  response.cookies.set(COOKIE_NAMES.PKCE_DATA, sealedPkce, {
-    ...COOKIE_OPTIONS,
-    maxAge: 60 * 10,
-  });
-
-  return response;
-}
-```
-
-> See the [example app](../../apps/example-app) for complete API route implementations.
-
-### 3. Wrap your app with LatchProvider
+Wrap your app in `app/layout.tsx`:
 
 ```tsx
-// app/layout.tsx
 import { LatchProvider } from '@latch/core/react';
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html>
       <body>
-        <LatchProvider>{children}</LatchProvider>
+        <LatchProvider>
+          {children}
+        </LatchProvider>
       </body>
     </html>
   );
 }
 ```
 
-### 4. Use authentication in your components
+### 5. Use Authentication in Components
 
 ```tsx
 'use client';
 
 import { useLatch } from '@latch/core/react';
 
-export default function Home() {
-  const { user, isAuthenticated, signIn, signOut } = useLatch();
+export default function Dashboard() {
+  const { user, signIn, signOut, isLoading } = useLatch();
 
-  if (!isAuthenticated) {
-    return <button onClick={() => signIn()}>Sign In</button>;
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!user) {
+    return <button onClick={signIn}>Sign In</button>;
   }
 
   return (
     <div>
-      <p>Welcome, {user?.name}!</p>
-      <button onClick={() => signOut()}>Sign Out</button>
+      <h1>Welcome, {user.name}</h1>
+      <p>{user.email}</p>
+      <button onClick={signOut}>Sign Out</button>
     </div>
   );
 }
 ```
 
-### 5. Protect routes
+### 6. Protect Routes with Middleware
+
+Create `middleware.ts`:
 
 ```tsx
-import { LatchGuard } from '@latch/core/react';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getLatchSession } from '@latch/core';
 
-export default function Dashboard() {
-  return (
-    <LatchGuard>
-      <DashboardContent />
-    </LatchGuard>
-  );
+export async function middleware(request: NextRequest) {
+  const session = await getLatchSession();
+
+  if (!session) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/profile/:path*'],
+};
 ```
 
 ## Authentication Modes
 
 ### Secure Proxy Mode (Default)
 
-Access tokens **never reach the browser**. All API calls are proxied through Next.js API routes.
+Access tokens stay on the server. All Graph API calls proxied through Next.js routes.
 
-```tsx
+```typescript
 // app/api/me/route.ts
-export async function GET(request: NextRequest) {
-  const config = getLatchConfig();
-  const refreshTokenCookie = request.cookies.get(COOKIE_NAMES.REFRESH_TOKEN);
-  const tokens = await refreshAccessToken(...);
+import { getAccessToken } from '@latch/core';
 
-  // Call Graph API - token never exposed to client
-  const response = await fetch(`${endpoints.graphBaseUrl}/v1.0/me`, {
-    headers: { Authorization: `Bearer ${tokens.access_token}` }
+export async function GET() {
+  const token = await getAccessToken();
+  if (!token) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Token never exposed to client
+  const res = await fetch('https://graph.microsoft.com/v1.0/me', {
+    headers: { Authorization: `Bearer ${token}` },
   });
 
-  return response.json();
+  return Response.json(await res.json());
 }
 ```
 
-### Direct Token Mode
+### Direct Token Mode (Advanced)
 
-Short-lived access token returned to client memory.
+Short-lived access tokens sent to client with auto-refresh. Only use for performance-critical scenarios.
 
-```tsx
+```typescript
 'use client';
 
 import { useAccessToken } from '@latch/core/react';
 
-export function UserProfile() {
-  const { accessToken, expiresAt } = useAccessToken();
+export default function Profile() {
+  const { accessToken, error, expiresAt } = useAccessToken({
+    autoRefresh: true,
+    refreshThreshold: 300000, // 5 minutes
+    retryOnFailure: true,
+  });
 
-  const fetchProfile = async () => {
-    const response = await fetch('https://graph.microsoft.us/v1.0/me', {
-      headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    return response.json();
-  };
+  // Use accessToken directly from browser for Graph API calls
 }
 ```
 
+See [AUTHENTICATION_SETUP.md](../../docs/AUTHENTICATION_SETUP.md) for detailed comparison.
+
+## Cloud Configuration
+
+Latch automatically configures endpoints based on `LATCH_CLOUD`:
+
+| Cloud | Login URL | Graph API |
+|-------|-----------|-----------|
+| `commercial` | `login.microsoftonline.com` | `graph.microsoft.com` |
+| `gcc-high` | `login.microsoftonline.us` | `graph.microsoft.us` |
+| `dod` | `login.microsoftonline.us` | `dod-graph.microsoft.us` |
+
+No manual URL configuration needed - scopes are automatically validated against the selected cloud.
+
 ## Documentation
 
-- **[API Reference](../../docs/API_REFERENCE.md)** - Complete API documentation
-- **[Authentication Modes](../../docs/AUTHENTICATION_MODES.md)** - Secure Proxy vs Direct Token
-- **[Troubleshooting](../../TROUBLESHOOTING.md)** - Solutions to common issues
+- [API Reference](../../docs/API_REFERENCE.md) - Complete API documentation
+- [Authentication Setup](../../docs/AUTHENTICATION_SETUP.md) - PKCE vs client_secret modes
+- [Troubleshooting](../../docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [Architecture](../../ARCHITECTURE.md) - Technical implementation details
+- [Security](../../SECURITY.md) - Threat model and security practices
 
 ## License
 
-Apache License 2.0 - see [LICENSE](../../LICENSE)
+MIT - see [LICENSE](LICENSE) file for details
+
+## Author
+
+[lance0](https://github.com/lance0)
+
+## Support
+
+- [GitHub Issues](https://github.com/lance0/latch/issues)
+- [Documentation](https://github.com/lance0/latch)
