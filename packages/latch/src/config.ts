@@ -1,4 +1,4 @@
-import { LatchConfig, LatchCloud, AzureEndpoints } from './types';
+import { LatchConfig, LatchCloud, AzureEndpoints, ClientCertificate, TokenCacheOptions } from './types';
 import { validateLatchConfig, createLatchError } from './errors';
 
 /**
@@ -15,6 +15,69 @@ export function getLatchConfig(): LatchConfig {
   const cookieSecret = process.env.LATCH_COOKIE_SECRET;
   const debug = process.env.LATCH_DEBUG === 'true';
 
+  // Parse client certificate (optional - alternative to client secret)
+  let clientCertificate: ClientCertificate | undefined;
+  const certPrivateKey = process.env.LATCH_CERTIFICATE_PRIVATE_KEY;
+  const certThumbprint = process.env.LATCH_CERTIFICATE_THUMBPRINT;
+  const certX5c = process.env.LATCH_CERTIFICATE_X5C;
+  const certKid = process.env.LATCH_CERTIFICATE_KID;
+
+  if (certPrivateKey && certThumbprint) {
+    clientCertificate = {
+      privateKey: certPrivateKey,
+      thumbprint: certThumbprint,
+      x5c: certX5c ? parseX5cCertChain(certX5c) : undefined,
+      kid: certKid || undefined,
+    };
+
+    if (debug) {
+      console.log('[Latch] Client certificate configured');
+      console.log(`[Latch] Certificate thumbprint: ${certThumbprint.substring(0, 8)}...`);
+      if (certKid) {
+        console.log(`[Latch] Certificate key ID: ${certKid}`);
+      }
+    }
+  } else if (certPrivateKey || certThumbprint) {
+    throw createLatchError(
+      'LATCH_CONFIG_MISSING',
+      'Incomplete certificate configuration. Both LATCH_CERTIFICATE_PRIVATE_KEY and LATCH_CERTIFICATE_THUMBPRINT are required.\n\n' +
+      'For certificate authentication, set:\n' +
+      '  LATCH_CERTIFICATE_PRIVATE_KEY=<PEM private key>\n' +
+      '  LATCH_CERTIFICATE_THUMBPRINT=<SHA-1 thumbprint>\n' +
+      '  LATCH_CERTIFICATE_X5C=<base64 cert chain> (optional)\n' +
+      '  LATCH_CERTIFICATE_KID=<key ID> (optional, for multi-cert scenarios)'
+    );
+  }
+
+  // Parse allowed audiences for OBO (optional)
+  const allowedAudiences = process.env.LATCH_ALLOWED_AUDIENCES
+    ? process.env.LATCH_ALLOWED_AUDIENCES.split(',').map(a => a.trim()).filter(Boolean)
+    : undefined;
+
+  // Parse OBO cache options (optional)
+  let oboCache: TokenCacheOptions | undefined;
+  const cacheEnabled = process.env.LATCH_OBO_CACHE_ENABLED;
+  const cacheTtlBuffer = process.env.LATCH_OBO_CACHE_TTL_BUFFER_SECONDS;
+  const cacheMaxSize = process.env.LATCH_OBO_CACHE_MAX_SIZE;
+
+  if (cacheEnabled !== undefined || cacheTtlBuffer || cacheMaxSize) {
+    oboCache = {
+      enabled: cacheEnabled === 'true',
+      ttlBufferSeconds: cacheTtlBuffer ? parseInt(cacheTtlBuffer, 10) : undefined,
+      maxCacheSize: cacheMaxSize ? parseInt(cacheMaxSize, 10) : undefined,
+    };
+
+    if (debug) {
+      console.log(`[Latch] OBO cache: ${oboCache.enabled !== false ? 'enabled' : 'disabled'}`);
+      if (oboCache.ttlBufferSeconds) {
+        console.log(`[Latch] OBO cache TTL buffer: ${oboCache.ttlBufferSeconds}s`);
+      }
+      if (oboCache.maxCacheSize) {
+        console.log(`[Latch] OBO cache max size: ${oboCache.maxCacheSize}`);
+      }
+    }
+  }
+
   // Validate configuration with enhanced error messages
   validateLatchConfig({
     clientId,
@@ -25,31 +88,70 @@ export function getLatchConfig(): LatchConfig {
   });
 
   // TypeScript knows these are defined after validation
-  const validatedConfig = {
+  const validatedConfig: LatchConfig = {
     clientId: clientId!,
     tenantId: tenantId!,
     clientSecret, // Optional - determines confidential vs public client flow
+    clientCertificate,
     cloud: cloud as LatchCloud,
     scopes: scopes || ['openid', 'profile', 'User.Read'],
     redirectUri:
       redirectUri || `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/latch/callback`,
     cookieSecret: cookieSecret!,
     debug,
+    allowedAudiences,
+    oboCache,
   };
 
   // Validate scopes match cloud environment
-  validateScopes(validatedConfig.scopes, validatedConfig.cloud);
+  if (validatedConfig.scopes && validatedConfig.scopes.length > 0) {
+    validateScopes(validatedConfig.scopes, validatedConfig.cloud);
+  }
 
   // Debug logging
   if (debug) {
     console.log('[Latch] Configuration loaded successfully');
-    console.log(`[Latch] Client type: ${clientSecret ? 'Confidential (with client_secret)' : 'Public (PKCE only)'}`);
+    const authMethod = clientCertificate
+      ? 'Confidential (with certificate)'
+      : clientSecret
+      ? 'Confidential (with client_secret)'
+      : 'Public (PKCE only)';
+    console.log(`[Latch] Client type: ${authMethod}`);
     console.log(`[Latch] Cloud: ${validatedConfig.cloud}`);
-    console.log(`[Latch] Scopes: ${validatedConfig.scopes.join(' ')}`);
+    if (validatedConfig.scopes) {
+      console.log(`[Latch] Scopes: ${validatedConfig.scopes.join(' ')}`);
+    }
     console.log(`[Latch] Redirect URI: ${validatedConfig.redirectUri}`);
+    if (allowedAudiences) {
+      console.log(`[Latch] Allowed audiences: ${allowedAudiences.join(', ')}`);
+    }
   }
 
   return validatedConfig;
+}
+
+/**
+ * Parse X.509 certificate chain from environment variable
+ * Supports JSON array or newline-separated base64 strings
+ */
+function parseX5cCertChain(x5cValue: string): string[] {
+  // Try parsing as JSON array first
+  if (x5cValue.trim().startsWith('[')) {
+    try {
+      const parsed = JSON.parse(x5cValue);
+      if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
+        return parsed;
+      }
+    } catch {
+      // Fall through to newline parsing
+    }
+  }
+
+  // Parse as newline-separated values
+  return x5cValue
+    .split(/[\r\n]+/)
+    .map(line => line.trim())
+    .filter(Boolean);
 }
 
 /**

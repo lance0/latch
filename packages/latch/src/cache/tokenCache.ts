@@ -188,8 +188,32 @@ let globalCache: TokenCache | null = null;
 /**
  * Get or create global token cache
  *
- * @param options - Cache options
+ * **Important:** Cache options are captured on first call and reused for the lifetime
+ * of the process. Subsequent calls with different options will be ignored.
+ *
+ * To set global cache options, either:
+ * 1. Configure via environment variables (recommended):
+ *    - LATCH_OBO_CACHE_ENABLED=true
+ *    - LATCH_OBO_CACHE_TTL_BUFFER_SECONDS=300
+ *    - LATCH_OBO_CACHE_MAX_SIZE=1000
+ *
+ * 2. Call this function early in your app initialization before any OBO calls
+ *
+ * 3. Pass options to individual OBO calls (takes precedence over global config)
+ *
+ * @param options - Cache options (only used on first call)
  * @returns Token cache instance
+ *
+ * @example
+ * // Initialize cache early in app startup (optional):
+ * import { getTokenCache } from '@latch/core';
+ * getTokenCache({ enabled: true, ttlBufferSeconds: 600, maxCacheSize: 500 });
+ *
+ * @example
+ * // Or configure via environment:
+ * process.env.LATCH_OBO_CACHE_ENABLED = 'true';
+ * process.env.LATCH_OBO_CACHE_TTL_BUFFER_SECONDS = '600';
+ * process.env.LATCH_OBO_CACHE_MAX_SIZE = '500';
  */
 export function getTokenCache(options?: TokenCacheOptions): TokenCache {
   const cacheOptions: Required<TokenCacheOptions> = {

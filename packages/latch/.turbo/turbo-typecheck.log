@@ -1,0 +1,4 @@
+
+> @latch/core@0.3.0 typecheck /home/lance/latch/packages/latch
+> tsc --noEmit
+

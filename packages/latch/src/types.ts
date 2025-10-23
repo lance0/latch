@@ -16,6 +16,9 @@ export interface ClientCertificate {
 
   /** Optional certificate chain in base64 format */
   x5c?: string[];
+
+  /** Optional key ID (kid) for multi-certificate scenarios */
+  kid?: string;
 }
 
 /**

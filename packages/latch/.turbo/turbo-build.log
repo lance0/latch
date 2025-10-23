@@ -1,30 +1,39 @@
 
-> @latch/core@0.3.0 build /home/lance/latch/packages/latch
+> @lance0/latch@0.3.0 build /home/lance/latch/packages/latch
 > tsup
 
-CLI Building entry: {"index":"src/index.ts","react/index":"src/react/index.ts"}
+CLI Building entry: {"index":"src/index.ts"}
+CLI Using tsconfig: tsconfig.json
+CLI Building entry: {"react/index":"src/react/index.ts"}
 CLI Using tsconfig: tsconfig.json
 CLI tsup v8.5.0
 CLI Using tsup config: /home/lance/latch/packages/latch/tsup.config.ts
+CLI tsup v8.5.0
+CLI Using tsup config: /home/lance/latch/packages/latch/tsup.config.ts
 CLI Target: es2022
+CLI Target: es2022
+ESM Build start
+CJS Build start
 CLI Cleaning output folder
 ESM Build start
 CJS Build start
 CJS dist/react/index.cjs     7.43 KB
-CJS dist/index.cjs           31.24 KB
 CJS dist/react/index.cjs.map 18.62 KB
-CJS dist/index.cjs.map       67.95 KB
-CJS ⚡️ Build success in -853ms
+CJS ⚡️ Build success in 240ms
 ESM dist/react/index.js     7.25 KB
-ESM dist/index.js           30.00 KB
-ESM dist/index.js.map       67.85 KB
 ESM dist/react/index.js.map 18.55 KB
-ESM ⚡️ Build success in -853ms
+ESM ⚡️ Build success in 241ms
+ESM dist/index.js     23.62 KB
+ESM dist/index.js.map 52.17 KB
+ESM ⚡️ Build success in 238ms
+CJS dist/index.cjs     24.71 KB
+CJS dist/index.cjs.map 52.20 KB
+CJS ⚡️ Build success in 238ms
 DTS Build start
-DTS ⚡️ Build success in 1344ms
-DTS dist/index.d.ts           4.18 KB
-DTS dist/react/index.d.ts     183.00 B
-DTS dist/index-BGu81SAE.d.ts  5.46 KB
-DTS dist/index.d.cts          4.19 KB
-DTS dist/react/index.d.cts    184.00 B
-DTS dist/index-BGu81SAE.d.cts 5.46 KB
+DTS Build start
+DTS ⚡️ Build success in 1638ms
+DTS dist/react/index.d.ts  3.03 KB
+DTS dist/react/index.d.cts 3.03 KB
+DTS ⚡️ Build success in 1688ms
+DTS dist/index.d.ts  7.67 KB
+DTS dist/index.d.cts 7.67 KB

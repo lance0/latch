@@ -38,6 +38,11 @@ export async function generateClientAssertion(
     x5t: certificate.thumbprint, // SHA-1 thumbprint (base64url)
   };
 
+  // Include key ID if provided (useful when multiple certs registered)
+  if (certificate.kid) {
+    header.kid = certificate.kid;
+  }
+
   // Include certificate chain if provided
   if (certificate.x5c && certificate.x5c.length > 0) {
     header.x5c = certificate.x5c;

@@ -37,6 +37,12 @@ export async function oboTokenForGraph(
     /** Microsoft Graph scopes (default: ["User.Read"]) */
     scopes?: string[];
 
+    /** CAE claims challenge for retry scenarios */
+    claims?: string;
+
+    /** Required authorized party (azp claim) to prevent token forwarding */
+    requiredAzp?: string;
+
     /** Custom token extractor (default: extracts from Authorization header) */
     extractToken?: (req: NextRequest) => string | null;
   }
@@ -78,7 +84,9 @@ export async function oboTokenForGraph(
       certificate: config.clientCertificate,
     },
     scopes,
+    claims: options?.claims,
     allowedAudiences: config.allowedAudiences,
+    requiredAzp: options?.requiredAzp,
     cacheOptions: config.oboCache,
   });
 
@@ -133,6 +141,12 @@ export async function oboTokenForApi(
      */
     scopes?: string[];
 
+    /** CAE claims challenge for retry scenarios */
+    claims?: string;
+
+    /** Required authorized party (azp claim) to prevent token forwarding */
+    requiredAzp?: string;
+
     /** Custom token extractor (default: extracts from Authorization header) */
     extractToken?: (req: NextRequest) => string | null;
   }
@@ -165,7 +179,9 @@ export async function oboTokenForApi(
       certificate: config.clientCertificate,
     },
     scopes,
+    claims: options.claims,
     allowedAudiences: config.allowedAudiences,
+    requiredAzp: options.requiredAzp,
     cacheOptions: config.oboCache,
   });
 
@@ -241,6 +257,12 @@ export async function oboTokenForFunction(
      */
     scopes?: string[];
 
+    /** CAE claims challenge for retry scenarios */
+    claims?: string;
+
+    /** Required authorized party (azp claim) to prevent token forwarding */
+    requiredAzp?: string;
+
     /** Custom token extractor (default: extracts from Authorization header) */
     extractToken?: (req: NextRequest) => string | null;
   }
@@ -284,7 +306,9 @@ export async function oboTokenForFunction(
       certificate: config.clientCertificate,
     },
     scopes,
+    claims: options.claims,
     allowedAudiences: config.allowedAudiences,
+    requiredAzp: options.requiredAzp,
     cacheOptions: config.oboCache,
   });
 
