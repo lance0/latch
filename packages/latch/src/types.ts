@@ -13,6 +13,13 @@ export interface LatchConfig {
   /** Azure AD Tenant ID */
   tenantId: string;
 
+  /**
+   * Azure AD Client Secret (optional)
+   * If provided, uses confidential client flow with client_secret.
+   * If omitted, uses public client flow with PKCE.
+   */
+  clientSecret?: string;
+
   /** Cloud environment */
   cloud: LatchCloud;
 

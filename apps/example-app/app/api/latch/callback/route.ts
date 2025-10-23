@@ -58,7 +58,8 @@ export async function GET(request: NextRequest) {
       config.redirectUri!,
       config.clientId,
       config.tenantId,
-      config.cloud
+      config.cloud,
+      config.clientSecret
     );
 
     // Verify ID token

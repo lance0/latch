@@ -3,6 +3,7 @@ import { LatchCloud, TokenResponse, LatchError } from '../types';
 
 /**
  * Exchange authorization code for tokens
+ * Supports both public client (PKCE) and confidential client (client_secret) flows
  */
 export async function exchangeCodeForTokens(
   code: string,
@@ -10,7 +11,8 @@ export async function exchangeCodeForTokens(
   redirectUri: string,
   clientId: string,
   tenantId: string,
-  cloud: LatchCloud
+  cloud: LatchCloud,
+  clientSecret?: string
 ): Promise<TokenResponse> {
   const endpoints = getAzureEndpoints(cloud, tenantId);
 
@@ -20,8 +22,18 @@ export async function exchangeCodeForTokens(
     code,
     redirect_uri: redirectUri,
     grant_type: 'authorization_code',
-    code_verifier: codeVerifier,
   });
+
+  // Add authentication based on client type
+  if (clientSecret) {
+    // Confidential client: authenticate with client_secret
+    params.append('client_secret', clientSecret);
+  }
+
+  if (codeVerifier) {
+    // Public client or additional PKCE security: include code_verifier
+    params.append('code_verifier', codeVerifier);
+  }
 
   try {
     const response = await fetch(endpoints.tokenUrl, {
@@ -46,13 +58,15 @@ export async function exchangeCodeForTokens(
 
 /**
  * Refresh access token using refresh token
+ * Supports both public client and confidential client (client_secret) flows
  */
 export async function refreshAccessToken(
   refreshToken: string,
   clientId: string,
   tenantId: string,
   cloud: LatchCloud,
-  scopes?: string[]
+  scopes?: string[],
+  clientSecret?: string
 ): Promise<TokenResponse> {
   const endpoints = getAzureEndpoints(cloud, tenantId);
 
@@ -64,6 +78,11 @@ export async function refreshAccessToken(
     refresh_token: refreshToken,
     grant_type: 'refresh_token',
   });
+
+  // Add client_secret for confidential clients
+  if (clientSecret) {
+    params.append('client_secret', clientSecret);
+  }
 
   try {
     const response = await fetch(endpoints.tokenUrl, {

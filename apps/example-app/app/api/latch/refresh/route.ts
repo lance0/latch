@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
       config.clientId,
       config.tenantId,
       config.cloud,
-      config.scopes
+      config.scopes,
+      config.clientSecret
     );
 
     // Update refresh token cookie if a new one was issued

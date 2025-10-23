@@ -88,6 +88,15 @@ LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
 - `gcc-high` - Azure Government GCC-High (`login.microsoftonline.us`)
 - `dod` - Azure Government DoD (`login.microsoftonline.us` with DoD Graph)
 
+**Authentication modes:**
+
+Latch supports two authentication modes:
+
+- **Public Client (PKCE)** - No client secret needed. Omit `LATCH_CLIENT_SECRET` from `.env.local`. Use for SPA app registrations or when you prefer not to manage secrets.
+- **Confidential Client** - Uses client secret. Add `LATCH_CLIENT_SECRET=your-secret` to `.env.local`. Use for Web app registrations (most common for Next.js).
+
+Both modes are equally secure. See [Authentication Setup Guide](./docs/AUTHENTICATION_SETUP.md) for detailed comparison and Azure AD configuration steps.
+
 ### 4. Wrap your app with LatchProvider
 
 ```tsx
@@ -246,6 +255,13 @@ pnpm build
 ## Documentation
 
 ### 📚 Guides
+
+- **[Authentication Setup](./docs/AUTHENTICATION_SETUP.md)** - Choose your authentication mode
+  - Public Client (PKCE) vs Confidential Client (client_secret)
+  - Azure AD app registration setup for each mode
+  - Complete configuration examples
+  - Migration guide between modes
+  - Troubleshooting common errors
 
 - **[Authentication Modes](./docs/AUTHENTICATION_MODES.md)** - Complete comparison of Secure Proxy vs Direct Token modes
   - Security trade-offs

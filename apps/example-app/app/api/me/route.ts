@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
       config.clientId,
       config.tenantId,
       config.cloud,
-      config.scopes
+      config.scopes,
+      config.clientSecret
     );
 
     // Call Microsoft Graph

@@ -8,6 +8,7 @@ import { validateLatchConfig, createLatchError } from './errors';
 export function getLatchConfig(): LatchConfig {
   const clientId = process.env.LATCH_CLIENT_ID;
   const tenantId = process.env.LATCH_TENANT_ID;
+  const clientSecret = process.env.LATCH_CLIENT_SECRET;
   const cloud = process.env.LATCH_CLOUD as LatchCloud | undefined;
   const scopes = process.env.LATCH_SCOPES?.split(' ');
   const redirectUri = process.env.LATCH_REDIRECT_URI;
@@ -27,6 +28,7 @@ export function getLatchConfig(): LatchConfig {
   const validatedConfig = {
     clientId: clientId!,
     tenantId: tenantId!,
+    clientSecret, // Optional - determines confidential vs public client flow
     cloud: cloud as LatchCloud,
     scopes: scopes || ['openid', 'profile', 'User.Read'],
     redirectUri:
@@ -41,6 +43,7 @@ export function getLatchConfig(): LatchConfig {
   // Debug logging
   if (debug) {
     console.log('[Latch] Configuration loaded successfully');
+    console.log(`[Latch] Client type: ${clientSecret ? 'Confidential (with client_secret)' : 'Public (PKCE only)'}`);
     console.log(`[Latch] Cloud: ${validatedConfig.cloud}`);
     console.log(`[Latch] Scopes: ${validatedConfig.scopes.join(' ')}`);
     console.log(`[Latch] Redirect URI: ${validatedConfig.redirectUri}`);
