@@ -72,59 +72,60 @@ export async function GET(request: NextRequest) {
       data,
       source: 'downstream-api',
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[OBO Example] Error:', error);
 
     // Handle specific OBO errors
-    if (error.code === 'LATCH_OBO_INVALID_ASSERTION') {
+    const err = error as { code?: string; details?: { claims?: string } };
+    if (err.code === 'LATCH_OBO_INVALID_ASSERTION') {
       return NextResponse.json(
         {
           error: 'Invalid or missing bearer token',
           message: 'Ensure Authorization header contains a valid Bearer token',
-          code: error.code,
+          code: err.code,
         },
         { status: 401 }
       );
     }
 
-    if (error.code === 'LATCH_OBO_AUDIENCE_MISMATCH') {
+    if (err.code === 'LATCH_OBO_AUDIENCE_MISMATCH') {
       return NextResponse.json(
         {
           error: 'Token not for this API',
           message: 'The bearer token audience does not match this API. Ensure the token was requested with the correct audience.',
-          code: error.code,
+          code: err.code,
         },
         { status: 403 }
       );
     }
 
-    if (error.code === 'LATCH_OBO_EXCHANGE_FAILED') {
+    if (err.code === 'LATCH_OBO_EXCHANGE_FAILED') {
       return NextResponse.json(
         {
           error: 'OBO token exchange failed',
           message: 'Failed to exchange token. Check Azure AD permissions and consent.',
-          code: error.code,
-          details: error.details,
+          code: err.code,
+          details: err.details,
         },
         { status: 500 }
       );
     }
 
-    if (error.code === 'LATCH_OBO_CAE_REQUIRED') {
+    if (err.code === 'LATCH_OBO_CAE_REQUIRED') {
       // CAE (Continuous Access Evaluation) claims challenge
       // The client needs to get a new token with the required claims
       return NextResponse.json(
         {
           error: 'Claims challenge required',
           message: 'Additional claims required for this operation',
-          code: error.code,
-          claims: error.details?.claims, // Return claims to client
+          code: err.code,
+          claims: err.details?.claims, // Return claims to client
         },
         {
           status: 401,
           headers: {
             // Standard WWW-Authenticate header for CAE
-            'WWW-Authenticate': `Bearer realm="", error="insufficient_claims", claims="${error.details?.claims}"`,
+            'WWW-Authenticate': `Bearer realm="", error="insufficient_claims", claims="${err.details?.claims}"`,
           },
         }
       );
@@ -134,7 +135,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to call downstream API',
-        message: error.message || 'Unknown error',
+        message: (error as Error).message || 'Unknown error',
       },
       { status: 500 }
     );
@@ -175,13 +176,13 @@ export async function POST(request: NextRequest) {
       success: true,
       data,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[OBO Example] POST Error:', error);
 
     return NextResponse.json(
       {
         error: 'Failed to process request',
-        message: error.message,
+        message: (error as Error).message,
       },
       { status: 500 }
     );

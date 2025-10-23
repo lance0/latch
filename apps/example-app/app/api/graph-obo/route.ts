@@ -74,25 +74,26 @@ export async function GET(request: NextRequest) {
       cloud: config.cloud,
       graphEndpoint: endpoints.graphBaseUrl,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[Graph OBO Example] Error:', error);
 
     // Handle OBO-specific errors
-    if (error.code?.startsWith('LATCH_OBO_')) {
+    const err = error as { code?: string; message?: string };
+    if (err.code?.startsWith('LATCH_OBO_')) {
       return NextResponse.json(
         {
           error: 'OBO flow failed',
-          code: error.code,
-          message: error.message,
+          code: err.code,
+          message: err.message,
         },
-        { status: error.code === 'LATCH_OBO_INVALID_ASSERTION' ? 401 : 500 }
+        { status: err.code === 'LATCH_OBO_INVALID_ASSERTION' ? 401 : 500 }
       );
     }
 
     return NextResponse.json(
       {
         error: 'Failed to fetch user profile',
-        message: error.message,
+        message: (error as Error).message,
       },
       { status: 500 }
     );
@@ -159,14 +160,15 @@ export async function POST(request: NextRequest) {
       data,
       cloud: config.cloud,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('[Graph OBO Example] POST Error:', error);
 
+    const err = error as { code?: string; message?: string };
     return NextResponse.json(
       {
         error: 'Failed to fetch Graph data',
-        message: error.message,
-        code: error.code,
+        message: err.message,
+        code: err.code,
       },
       { status: 500 }
     );
