@@ -50,6 +50,15 @@ export {
   extractBearerToken,
   isTokenExpiringSoon,
 } from './oidc/accessTokenValidation';
+export {
+  parseCAEChallenge,
+  buildCAEChallengeHeader,
+  isCAEError,
+  extractClaimsFromError,
+  withCAERetry,
+  type CAEChallenge,
+  type CAERetryConfig,
+} from './oidc/caeHelper';
 
 // Error Handling
 export {
