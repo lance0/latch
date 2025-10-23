@@ -11,6 +11,11 @@ export type {
   LatchErrorCode,
   PKCEData,
   RefreshTokenData,
+  ClientCertificate,
+  TokenCacheOptions,
+  OBOTokenRequest,
+  OBOTokenResponse,
+  ValidatedAccessToken,
 } from './types';
 export { LatchError } from './types';
 
@@ -32,6 +37,19 @@ export { generateState, generateNonce } from './crypto/random';
 // OIDC
 export { exchangeCodeForTokens, refreshAccessToken } from './oidc/tokens';
 export { validateState, validateReturnUrl, verifyIdToken } from './oidc/validation';
+
+// OBO (On-Behalf-Of) Flow
+export { exchangeTokenOnBehalfOf } from './oidc/obo';
+export {
+  oboTokenForGraph,
+  oboTokenForApi,
+  oboTokenForFunction,
+} from './oidc/oboHelpers';
+export {
+  validateAccessToken,
+  extractBearerToken,
+  isTokenExpiringSoon,
+} from './oidc/accessTokenValidation';
 
 // Error Handling
 export {

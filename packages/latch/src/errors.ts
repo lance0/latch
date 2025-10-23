@@ -237,6 +237,104 @@ LATCH_SCOPES=openid profile User.Read`,
       '  • Cookie cleared by browser',
     ],
   },
+
+  LATCH_OBO_INVALID_ASSERTION: {
+    title: 'Invalid Bearer Token',
+    steps: [
+      'The incoming bearer token could not be validated',
+      'Common causes:',
+      '  • Token signature verification failed',
+      '  • Token is expired',
+      '  • Token is malformed',
+      '  • Wrong JWKS endpoint for cloud',
+    ],
+    example: 'Ensure Authorization header contains valid Bearer token',
+  },
+
+  LATCH_OBO_AUDIENCE_MISMATCH: {
+    title: 'Token Audience Mismatch',
+    steps: [
+      'The bearer token is not for your API',
+      'Token audience (aud claim) must match your client ID',
+      'Steps to fix:',
+      '  1. Check token was requested for your API',
+      '  2. Verify client ID in config matches app registration',
+      '  3. Ensure upstream caller requested token with correct audience',
+    ],
+    example: 'Token aud must be your client ID or api:// URI',
+  },
+
+  LATCH_OBO_TENANT_MISMATCH: {
+    title: 'Token Tenant Mismatch',
+    steps: [
+      'Token is from a different tenant',
+      'Token tid claim must match your configured tenant ID',
+      'Possible causes:',
+      '  • Multi-tenant configuration mismatch',
+      '  • Token from wrong Azure AD instance',
+    ],
+  },
+
+  LATCH_OBO_ISSUER_MISMATCH: {
+    title: 'Token Issuer Mismatch',
+    steps: [
+      'Token issuer does not match expected value',
+      'This may indicate:',
+      '  • Sovereign cloud mismatch (.com vs .us)',
+      '  • Wrong tenant ID',
+      '  • Token from unexpected source',
+    ],
+    example: 'Verify LATCH_CLOUD matches your Azure AD instance',
+  },
+
+  LATCH_OBO_EXCHANGE_FAILED: {
+    title: 'OBO Token Exchange Failed',
+    steps: [
+      'Failed to exchange user token for downstream API token',
+      'Common causes:',
+      '  • Missing or invalid client secret/certificate',
+      '  • Downstream API not configured in Azure AD',
+      '  • Missing delegated permissions',
+      '  • Consent not granted',
+    ],
+    example: 'Check Azure AD app registration has required API permissions',
+  },
+
+  LATCH_OBO_CAE_REQUIRED: {
+    title: 'Claims Challenge Required (CAE)',
+    steps: [
+      'Azure AD requires claims challenge for Continuous Access Evaluation',
+      'This is normal for sensitive operations',
+      'To handle:',
+      '  1. Extract claims from error details',
+      '  2. Retry OBO call with claims parameter',
+      '  3. Return WWW-Authenticate header to client if needed',
+    ],
+    example: 'See CAE documentation for handling claims challenges',
+  },
+
+  LATCH_OBO_TOKEN_EXPIRED: {
+    title: 'Access Token Expired',
+    steps: [
+      'The access token has expired',
+      'Solutions:',
+      '  • Request a new token from upstream',
+      '  • Check token expiration before use',
+      '  • Implement token refresh logic',
+    ],
+  },
+
+  LATCH_OBO_INVALID_CONFIG: {
+    title: 'Invalid OBO Configuration',
+    steps: [
+      'OBO flow requires specific configuration',
+      'Requirements:',
+      '  • Client secret OR certificate (confidential client)',
+      '  • Either scopes OR resource (not both)',
+      '  • Valid downstream API audience',
+    ],
+    example: 'Provide either clientSecret or clientCertificate in config',
+  },
 };
 
 /**

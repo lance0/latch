@@ -4,6 +4,35 @@
 export type LatchCloud = 'commercial' | 'gcc-high' | 'dod';
 
 /**
+ * Client certificate configuration for confidential clients
+ * Alternative to client_secret, preferred for IL4/IL5 environments
+ */
+export interface ClientCertificate {
+  /** PEM-encoded private key */
+  privateKey: string;
+
+  /** SHA-1 thumbprint of the certificate (for x5t header) */
+  thumbprint: string;
+
+  /** Optional certificate chain in base64 format */
+  x5c?: string[];
+}
+
+/**
+ * Token cache configuration for OBO flows
+ */
+export interface TokenCacheOptions {
+  /** Enable token caching (default: true) */
+  enabled?: boolean;
+
+  /** Expire cached tokens N seconds early to avoid expiration race conditions (default: 300 = 5 minutes) */
+  ttlBufferSeconds?: number;
+
+  /** Maximum number of cached tokens before LRU eviction (default: 1000) */
+  maxCacheSize?: number;
+}
+
+/**
  * Latch configuration
  */
 export interface LatchConfig {
@@ -20,6 +49,12 @@ export interface LatchConfig {
    */
   clientSecret?: string;
 
+  /**
+   * Client certificate for confidential client (alternative to clientSecret)
+   * Preferred for IL4/IL5 environments
+   */
+  clientCertificate?: ClientCertificate;
+
   /** Cloud environment */
   cloud: LatchCloud;
 
@@ -34,6 +69,12 @@ export interface LatchConfig {
 
   /** Enable debug logging (never logs tokens) */
   debug?: boolean;
+
+  /** Token cache configuration for OBO flows */
+  oboCache?: TokenCacheOptions;
+
+  /** Allowed audiences for incoming bearer tokens (your API's identifiers) */
+  allowedAudiences?: string[];
 }
 
 /**
@@ -72,6 +113,108 @@ export interface TokenResponse {
 }
 
 /**
+ * On-Behalf-Of token request
+ */
+export interface OBOTokenRequest {
+  /** Incoming user bearer token (from Authorization header) */
+  userAssertion: string;
+
+  /** Your API's Azure AD client ID */
+  clientId: string;
+
+  /** Azure AD tenant ID */
+  tenantId: string;
+
+  /** Cloud environment */
+  cloud: LatchCloud;
+
+  /** Client authentication credentials */
+  clientAuth: {
+    /** Client secret (confidential client) */
+    clientSecret?: string;
+
+    /** Client certificate (alternative to secret, preferred for IL4/IL5) */
+    certificate?: ClientCertificate;
+  };
+
+  /** Requested scopes for downstream API (e.g., ["api://downstream/.default"]) */
+  scopes?: string[];
+
+  /** Resource identifier (v1 endpoint compatibility, prefer scopes) */
+  resource?: string;
+
+  /** Claims for CAE (Continuous Access Evaluation) challenge round-trip */
+  claims?: string;
+
+  /** Additional allowed audiences for incoming token validation (e.g., ["api://your-api"]) */
+  allowedAudiences?: string[];
+
+  /** Required authorized party (azp claim) to prevent token forwarding from unexpected clients */
+  requiredAzp?: string;
+
+  /** Token cache options (overrides config default) */
+  cacheOptions?: TokenCacheOptions;
+}
+
+/**
+ * On-Behalf-Of token response
+ */
+export interface OBOTokenResponse {
+  /** Access token for downstream API */
+  access_token: string;
+
+  /** Token type (usually "Bearer") */
+  token_type: string;
+
+  /** Token lifetime in seconds */
+  expires_in: number;
+
+  /** Computed expiration timestamp (Date.now() + expires_in * 1000) */
+  expires_at: number;
+
+  /** Granted scopes */
+  scope: string;
+}
+
+/**
+ * Validated access token claims
+ */
+export interface ValidatedAccessToken {
+  /** Subject (user ID) */
+  sub: string;
+
+  /** Tenant ID */
+  tid: string;
+
+  /** Audience (should match your API's client ID or audience URI) */
+  aud: string;
+
+  /** Issuer (Azure AD endpoint) */
+  iss: string;
+
+  /** Issued at time */
+  iat: number;
+
+  /** Expiration time */
+  exp: number;
+
+  /** Not before time */
+  nbf?: number;
+
+  /** Scopes granted */
+  scp?: string;
+
+  /** Application ID (for app-only tokens) */
+  appid?: string;
+
+  /** Authorized party (who requested the token) */
+  azp?: string;
+
+  /** Additional claims */
+  [key: string]: unknown;
+}
+
+/**
  * Latch error codes
  */
 export type LatchErrorCode =
@@ -93,7 +236,15 @@ export type LatchErrorCode =
   | 'LATCH_ID_TOKEN_INVALID'
   | 'LATCH_REFRESH_TOKEN_MISSING'
   | 'LATCH_ENCRYPTION_FAILED'
-  | 'LATCH_DECRYPTION_FAILED';
+  | 'LATCH_DECRYPTION_FAILED'
+  | 'LATCH_OBO_INVALID_ASSERTION'
+  | 'LATCH_OBO_AUDIENCE_MISMATCH'
+  | 'LATCH_OBO_TENANT_MISMATCH'
+  | 'LATCH_OBO_ISSUER_MISMATCH'
+  | 'LATCH_OBO_EXCHANGE_FAILED'
+  | 'LATCH_OBO_CAE_REQUIRED'
+  | 'LATCH_OBO_TOKEN_EXPIRED'
+  | 'LATCH_OBO_INVALID_CONFIG';
 
 /**
  * Latch error
