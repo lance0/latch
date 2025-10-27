@@ -6,7 +6,7 @@
 
 **Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support**
 
-Latch is a lightweight authentication library built specifically for Next.js App Router with first-class support for Azure Government clouds (GCC-High, DoD). Implements PKCE S256, encrypted HttpOnly cookies, and provides both Secure Proxy and Direct Token modes.
+Latch is a lightweight authentication library built specifically for Next.js 15/16 App Router with first-class support for Azure Government clouds (GCC-High, DoD). Implements PKCE S256, encrypted HttpOnly cookies, and provides both Secure Proxy and Direct Token modes.
 
 ## Features
 
