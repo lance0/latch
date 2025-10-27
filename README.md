@@ -100,7 +100,7 @@ Both modes are equally secure. See [Authentication Setup Guide](./docs/AUTHENTIC
 ### 4. Wrap your app with LatchProvider
 
 ```tsx
-import { LatchProvider } from '@latch/core/react';
+import { LatchProvider } from '@lance0/latch/react';
 
 export default function RootLayout({ children }) {
   return (
@@ -118,7 +118,7 @@ export default function RootLayout({ children }) {
 ```tsx
 'use client';
 
-import { useLatch } from '@latch/core/react';
+import { useLatch } from '@lance0/latch/react';
 
 export default function Home() {
   const { user, isAuthenticated, signIn, signOut } = useLatch();
@@ -141,7 +141,7 @@ export default function Home() {
 **Option A: Component-level protection**
 
 ```tsx
-import { LatchGuard } from '@latch/core/react';
+import { LatchGuard } from '@lance0/latch/react';
 
 export default function Dashboard() {
   return (

@@ -503,7 +503,7 @@ Exchange an incoming access token for a new token scoped to a different resource
 
 **Import:**
 ```typescript
-import { exchangeTokenOnBehalfOf } from '@latch/core';
+import { exchangeTokenOnBehalfOf } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -544,7 +544,7 @@ interface OBOTokenResponse {
 **Example (Client Secret):**
 
 ```typescript
-import { exchangeTokenOnBehalfOf } from '@latch/core';
+import { exchangeTokenOnBehalfOf } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   const bearerToken = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -570,7 +570,7 @@ export async function GET(request: NextRequest) {
 **Example (Certificate - IL4/IL5):**
 
 ```typescript
-import { exchangeTokenOnBehalfOf } from '@latch/core';
+import { exchangeTokenOnBehalfOf } from '@lance0/latch';
 
 const oboResponse = await exchangeTokenOnBehalfOf({
   userAssertion: bearerToken,
@@ -627,7 +627,7 @@ Convenience wrapper for calling Microsoft Graph API via OBO.
 
 **Import:**
 ```typescript
-import { oboTokenForGraph } from '@latch/core';
+import { oboTokenForGraph } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -654,7 +654,7 @@ function oboTokenForGraph(
 **Example:**
 
 ```typescript
-import { oboTokenForGraph, getAzureEndpoints, getLatchConfig } from '@latch/core';
+import { oboTokenForGraph, getAzureEndpoints, getLatchConfig } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   const config = getLatchConfig();
@@ -689,7 +689,7 @@ Get OBO token for a custom downstream API.
 
 **Import:**
 ```typescript
-import { oboTokenForApi } from '@latch/core';
+import { oboTokenForApi } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -718,7 +718,7 @@ function oboTokenForApi(
 **Example:**
 
 ```typescript
-import { oboTokenForApi } from '@latch/core';
+import { oboTokenForApi } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   // Get token for downstream API
@@ -751,7 +751,7 @@ Get OBO token for an Azure Function with Easy Auth.
 
 **Import:**
 ```typescript
-import { oboTokenForFunction } from '@latch/core';
+import { oboTokenForFunction } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -780,7 +780,7 @@ function oboTokenForFunction(
 **Example:**
 
 ```typescript
-import { oboTokenForFunction } from '@latch/core';
+import { oboTokenForFunction } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   const functionToken = await oboTokenForFunction(request, {
@@ -814,7 +814,7 @@ Validate an incoming access token (verifies signature, audience, issuer, expirat
 
 **Import:**
 ```typescript
-import { validateAccessToken } from '@latch/core';
+import { validateAccessToken } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -864,7 +864,7 @@ interface ValidatedAccessToken {
 **Example:**
 
 ```typescript
-import { validateAccessToken, extractBearerToken } from '@latch/core';
+import { validateAccessToken, extractBearerToken } from '@lance0/latch';
 
 export async function POST(request: NextRequest) {
   const token = extractBearerToken(request.headers.get('authorization'));
@@ -908,7 +908,7 @@ Extract bearer token from Authorization header.
 
 **Import:**
 ```typescript
-import { extractBearerToken } from '@latch/core';
+import { extractBearerToken } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -921,7 +921,7 @@ function extractBearerToken(authHeader: string | null): string | null
 **Example:**
 
 ```typescript
-import { extractBearerToken } from '@latch/core';
+import { extractBearerToken } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   const token = extractBearerToken(request.headers.get('authorization'));
@@ -948,7 +948,7 @@ Check if token is expiring within a threshold.
 
 **Import:**
 ```typescript
-import { isTokenExpiringSoon } from '@latch/core';
+import { isTokenExpiringSoon } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -971,7 +971,7 @@ function isTokenExpiringSoon(
 **Example:**
 
 ```typescript
-import { isTokenExpiringSoon } from '@latch/core';
+import { isTokenExpiringSoon } from '@lance0/latch';
 
 const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes from now
 
@@ -996,7 +996,7 @@ Parse WWW-Authenticate header for CAE claims challenge.
 
 **Import:**
 ```typescript
-import { parseCAEChallenge } from '@latch/core';
+import { parseCAEChallenge } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -1019,7 +1019,7 @@ interface CAEChallenge {
 **Example:**
 
 ```typescript
-import { parseCAEChallenge, oboTokenForGraph } from '@latch/core';
+import { parseCAEChallenge, oboTokenForGraph } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   const graphToken = await oboTokenForGraph(request);
@@ -1064,7 +1064,7 @@ Build WWW-Authenticate header for CAE challenge (to return to client).
 
 **Import:**
 ```typescript
-import { buildCAEChallengeHeader } from '@latch/core';
+import { buildCAEChallengeHeader } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -1089,7 +1089,7 @@ function buildCAEChallengeHeader(
 **Example:**
 
 ```typescript
-import { buildCAEChallengeHeader } from '@latch/core';
+import { buildCAEChallengeHeader } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   try {
@@ -1125,7 +1125,7 @@ Check if error is CAE-related.
 
 **Import:**
 ```typescript
-import { isCAEError } from '@latch/core';
+import { isCAEError } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -1138,7 +1138,7 @@ function isCAEError(error: any): boolean
 **Example:**
 
 ```typescript
-import { isCAEError, extractClaimsFromError } from '@latch/core';
+import { isCAEError, extractClaimsFromError } from '@lance0/latch';
 
 try {
   const token = await oboTokenForGraph(request);
@@ -1171,7 +1171,7 @@ Extract claims string from Latch OBO error.
 
 **Import:**
 ```typescript
-import { extractClaimsFromError } from '@latch/core';
+import { extractClaimsFromError } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -1184,7 +1184,7 @@ function extractClaimsFromError(error: any): string | null
 **Example:**
 
 ```typescript
-import { extractClaimsFromError, buildCAEChallengeHeader } from '@latch/core';
+import { extractClaimsFromError, buildCAEChallengeHeader } from '@lance0/latch';
 
 try {
   const token = await oboTokenForGraph(request);
@@ -1214,7 +1214,7 @@ Execute operation with automatic CAE retry detection.
 
 **Import:**
 ```typescript
-import { withCAERetry } from '@latch/core';
+import { withCAERetry } from '@lance0/latch';
 ```
 
 **Signature:**
@@ -1237,7 +1237,7 @@ interface CAERetryConfig {
 **Example:**
 
 ```typescript
-import { withCAERetry, oboTokenForGraph, parseCAEChallenge } from '@latch/core';
+import { withCAERetry, oboTokenForGraph, parseCAEChallenge } from '@lance0/latch';
 
 export async function GET(request: NextRequest) {
   try {

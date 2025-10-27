@@ -81,7 +81,7 @@ See the [example-app](../../apps/example-app/app/api/latch) for complete referen
 - `POST /api/latch/refresh` - Refreshes access token
 - `GET /api/latch/logout` - Clears session
 
-All crypto utilities (PKCE generation, cookie sealing, state/nonce) are exported from `@latch/core`.
+All crypto utilities (PKCE generation, cookie sealing, state/nonce) are exported from `@lance0/latch`.
 
 ### 4. Add React Provider
 

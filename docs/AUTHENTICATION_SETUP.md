@@ -116,7 +116,7 @@ LATCH_COOKIE_SECRET=<generate with: openssl rand -base64 32>
 The CLI wizard will ask which mode you want:
 
 ```bash
-npx @latch/cli init
+npx @lance0/latch-cli init
 ```
 
 You'll be prompted:
