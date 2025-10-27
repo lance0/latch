@@ -1,4 +1,0 @@
-
-> @latch/example-app@0.3.0 typecheck /home/lance/latch/apps/example-app
-> tsc --noEmit
-
