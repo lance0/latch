@@ -11,7 +11,8 @@
   },
   "homepage": "https://github.com/lance0/latch#readme",
   "bugs": {
-    "url": "https://github.com/lance0/latch/issues"
+    "url": "https://github.com/lance0/latch/issues",
+    "email": "lance@lance0.com"
   },
   "type": "module",
   "bin": {

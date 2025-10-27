@@ -141,7 +141,7 @@ If deploying to GCC-High (IL4) or DoD (IL5) environments:
 
 **DO NOT** open a public GitHub issue for security vulnerabilities.
 
-Instead, email: `security@latch.dev` (or the maintainer directly)
+Instead, email: **lance@lance0.com**
 
 Include:
 
