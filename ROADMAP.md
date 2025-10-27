@@ -504,4 +504,4 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
 
 **Questions?** Open a [GitHub Discussion](https://github.com/lance0/latch/discussions)
 **Found a bug?** Submit an [Issue](https://github.com/lance0/latch/issues)
-**Security issue?** Email `lance@yourdomain.com` (update with your contact)
+**Security issue?** See [SECURITY.md](./SECURITY.md) for reporting instructions

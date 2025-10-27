@@ -11,8 +11,8 @@ This repository uses pnpm workspaces and Turborepo:
 ```
 latch/
 ├── packages/
-│   ├── latch/          # @latch/core - Core authentication library
-│   └── latch-cli/      # @latch/cli - CLI tools (init wizard, secret generator)
+│   ├── latch/          # @lance0/latch - Core authentication library
+│   └── latch-cli/      # @lance0/latch-cli - CLI tools (init wizard, secret generator)
 ├── apps/
 │   └── example-app/    # Example Next.js application
 ├── docs/               # Documentation
@@ -34,9 +34,9 @@ latch/
 ### 1. Install dependencies
 
 ```bash
-pnpm add @latch/core
+pnpm add @lance0/latch
 # or
-npm install @latch/core
+npm install @lance0/latch
 ```
 
 ### 2. Or Clone and Develop Locally
@@ -53,7 +53,7 @@ pnpm build
 The fastest way to get started is with the CLI wizard:
 
 ```bash
-npx @latch/cli init
+npx @lance0/latch-cli init
 ```
 
 This will:
@@ -65,10 +65,10 @@ This will:
 **Or generate just a secret:**
 
 ```bash
-npx @latch/cli generate-secret
+npx @lance0/latch-cli generate-secret
 ```
 
-See [@latch/cli documentation](./packages/latch-cli/README.md) for more details.
+See [@lance0/latch-cli documentation](./packages/latch-cli/README.md) for more details.
 
 ### 3. Or Configure Manually
 
