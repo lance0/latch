@@ -16,6 +16,18 @@ export function validateState(receivedState: string | null, expectedState: strin
 
 /**
  * Validate return URL is same-origin and not an open redirect
+ * 
+ * @param returnTo - The URL to validate (can be relative or absolute)
+ * @param baseUrl - The base URL of your application (e.g., request origin or redirectUri)
+ * @returns A validated relative path (pathname + search params)
+ * 
+ * @example
+ * ```typescript
+ * // In your start route:
+ * const origin = request.nextUrl.origin; // or config.redirectUri
+ * const returnTo = searchParams.get('returnTo');
+ * const validatedPath = validateReturnUrl(returnTo, origin);
+ * ```
  */
 export function validateReturnUrl(returnTo: string | null | undefined, baseUrl: string): string {
   // Default to home page
@@ -24,21 +36,21 @@ export function validateReturnUrl(returnTo: string | null | undefined, baseUrl: 
   }
 
   try {
-    // Parse the return URL
+    // Parse the return URL - works with both relative and absolute URLs
     const returnUrl = new URL(returnTo, baseUrl);
     const base = new URL(baseUrl);
 
-    // Ensure same origin
+    // Ensure same origin (prevent open redirect attacks)
     if (returnUrl.origin !== base.origin) {
       throw new Error('Cross-origin redirect not allowed');
     }
 
-    // Return just the pathname and search
+    // Return just the pathname and search (removes origin)
     return returnUrl.pathname + returnUrl.search;
   } catch (error) {
     throw new LatchError(
       'LATCH_INVALID_RETURN_URL',
-      'Invalid return URL - must be same-origin',
+      `Invalid return URL - must be same-origin. Received: ${returnTo}, Expected origin: ${new URL(baseUrl).origin}`,
       error
     );
   }

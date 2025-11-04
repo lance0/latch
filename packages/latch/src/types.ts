@@ -292,8 +292,18 @@ export interface LatchSession {
 export interface AzureEndpoints {
   loginBaseUrl: string;
   graphBaseUrl: string;
+  /** OAuth 2.0 authorization endpoint - use this to start the OAuth flow */
   authorizeUrl: string;
   tokenUrl: string;
   logoutUrl: string;
   jwksUri: string;
 }
+
+/**
+ * @deprecated Use `authorizeUrl` instead
+ * Common mistake: accessing .authorization instead of .authorizeUrl
+ */
+export type AzureEndpointsWithDeprecated = AzureEndpoints & {
+  /** @deprecated Use authorizeUrl instead */
+  authorization?: never;
+};
