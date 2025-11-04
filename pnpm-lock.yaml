@@ -131,7 +131,7 @@ importers:
         specifier: ^5.9.6
         version: 5.10.0
       next:
-        specifier: ^15.0.0
+        specifier: '>=15.0.0'
         version: 16.0.0(@babel/core@7.28.5)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react:
         specifier: ^19.0.0
