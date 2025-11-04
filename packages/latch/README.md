@@ -1,7 +1,7 @@
 # @lance0/latch
 
 [![npm version](https://badge.fury.io/js/@lance0%2Flatch.svg)](https://www.npmjs.com/package/@lance0/latch)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 
 **Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support**
@@ -16,7 +16,7 @@ Latch is a lightweight authentication library built specifically for Next.js 15/
 - ✅ **Dual Auth Modes** - PKCE-only (public) or client_secret (confidential)
 - ✅ **Zero-Downtime Rotation** - Client secret rotation procedures included
 - ✅ **Type Safe** - Full TypeScript strict mode with IntelliSense
-- ✅ **Lightweight** - 61KB package, only depends on `jose`
+- ✅ **Lightweight** - 186KB package, only depends on `jose`
 - ✅ **Battle Tested** - 135 unit tests including security attack scenarios
 
 ## Installation
