@@ -1,8 +1,34 @@
 import { LatchError } from '../types';
 
 /**
- * Seal (encrypt) data using AES-GCM
+ * Seal (encrypt) data using AES-GCM with automatic cookie size validation
  * Returns base64url-encoded string: iv.authTag.ciphertext
+ * 
+ * ⚠️ **Browser Cookie Limit:** 4096 bytes per cookie
+ * 
+ * This function warns if encrypted data approaches browser cookie limits.
+ * 
+ * @param data - Data to encrypt (will be JSON.stringify'd)
+ * @param secret - Encryption secret (32+ bytes recommended)
+ * @returns Base64url-encoded encrypted string
+ * 
+ * @throws {LatchError} LATCH_ENCRYPTION_FAILED if encryption fails
+ * @throws {LatchError} LATCH_INVALID_PARAMETER if data exceeds 4KB when encrypted
+ * 
+ * @example
+ * ```typescript
+ * // ✅ GOOD: Small user object (~300 bytes encrypted)
+ * const sealed = await seal(user, config.cookieSecret);
+ * 
+ * // ⚠️ WARNING: Large refresh token (~2700 bytes encrypted)
+ * const sealed = await seal({ refreshToken, expiresAt }, config.cookieSecret);
+ * 
+ * // ❌ BAD: Everything in one cookie (exceeds 4KB!)
+ * const sealed = await seal(
+ *   { user, accessToken, refreshToken, expiresAt },
+ *   secret
+ * ); // Throws: Cookie too large (6000 bytes)
+ * ```
  */
 export async function seal<T>(data: T, secret: string): Promise<string> {
   try {
@@ -35,8 +61,41 @@ export async function seal<T>(data: T, secret: string): Promise<string> {
     combined.set(authTag, iv.length);
     combined.set(actualCiphertext, iv.length + authTag.length);
 
-    return base64UrlEncode(combined);
+    const sealed = base64UrlEncode(combined);
+    
+    // Cookie size validation
+    const sizeBytes = sealed.length;
+    const COOKIE_SIZE_LIMIT = 4096;
+    const COOKIE_SIZE_WARNING = 3500;
+    
+    if (sizeBytes > COOKIE_SIZE_LIMIT) {
+      throw new LatchError(
+        'LATCH_INVALID_PARAMETER',
+        `[Latch] Cookie too large: ${sizeBytes} bytes (browser limit: ${COOKIE_SIZE_LIMIT} bytes).\n\n` +
+        `Common causes:\n` +
+        `  • Storing access tokens in cookies (don't do this!)\n` +
+        `  • Storing multiple tokens in one cookie\n` +
+        `  • Storing large user objects\n\n` +
+        `Solution: Split data across multiple cookies:\n` +
+        `  • COOKIE_NAMES.ID_TOKEN - User object only\n` +
+        `  • COOKIE_NAMES.REFRESH_TOKEN - Refresh token only\n` +
+        `  • Don't store access tokens in cookies\n\n` +
+        `See: https://github.com/lance0/latch#cookie-storage-pattern`
+      );
+    }
+    
+    if (sizeBytes > COOKIE_SIZE_WARNING) {
+      console.warn(
+        `[Latch] Warning: Encrypted data is ${sizeBytes} bytes (cookie limit: ${COOKIE_SIZE_LIMIT} bytes).\n` +
+        `This is close to the browser cookie size limit. Consider splitting into separate cookies.`
+      );
+    }
+
+    return sealed;
   } catch (error) {
+    if (error instanceof LatchError) {
+      throw error;
+    }
     throw new LatchError('LATCH_ENCRYPTION_FAILED', 'Failed to encrypt data', error);
   }
 }

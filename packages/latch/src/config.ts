@@ -285,21 +285,104 @@ export const RECOMMENDED_SCOPES = {
 /**
  * Cookie names used by Latch for storing authentication data
  * 
+ * ⚠️ **IMPORTANT:** Latch uses **three separate cookies** to stay under browser 4KB limits.
+ * 
+ * Each cookie stores different data:
+ * - `ID_TOKEN` - Stores the DECODED user object (~300 bytes)
+ * - `REFRESH_TOKEN` - Stores refresh token + expiry (~2700 bytes)
+ * - `PKCE_DATA` - Temporary PKCE flow data, deleted after callback (~250 bytes)
+ * 
+ * ❌ **DO NOT** store everything in one cookie - it will exceed 4KB and fail silently!
+ * 
  * @example
  * ```typescript
- * // Get PKCE data from cookie
- * const pkceCookie = request.cookies.get(COOKIE_NAMES.PKCE_DATA);
+ * // ✅ CORRECT: Set cookies separately after token exchange
+ * const user = await verifyIdToken(tokens.id_token, ...);
  * 
- * // Set refresh token cookie
- * response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealed, COOKIE_OPTIONS);
+ * // Cookie 1: User object only
+ * const sealedUser = await seal(user, config.cookieSecret);
+ * response.cookies.set(COOKIE_NAMES.ID_TOKEN, sealedUser, COOKIE_OPTIONS);
+ * 
+ * // Cookie 2: Refresh token + expiry
+ * const sealedRT = await seal(
+ *   { refreshToken: tokens.refresh_token!, expiresAt: Date.now() + tokens.expires_in * 1000 },
+ *   config.cookieSecret
+ * );
+ * response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealedRT, COOKIE_OPTIONS);
+ * 
+ * // ❌ WRONG: Everything in one cookie (exceeds 4KB!)
+ * const sealedSession = await seal(
+ *   { user, accessToken, refreshToken, expiresAt },
+ *   config.cookieSecret
+ * ); // Throws: Cookie too large
+ * response.cookies.set(COOKIE_NAMES.ID_TOKEN, sealedSession, COOKIE_OPTIONS);
  * ```
+ * 
+ * @see Example callback route: apps/example-app/app/api/latch/callback/route.ts
  */
 export const COOKIE_NAMES = {
-  /** Encrypted refresh token cookie */
+  /**
+   * Stores encrypted refresh token + expiry timestamp (~2700 bytes)
+   * 
+   * Contains: `{ refreshToken: string, expiresAt: number }`
+   * 
+   * @example
+   * ```typescript
+   * const rtData: RefreshTokenData = {
+   *   refreshToken: tokens.refresh_token!,
+   *   expiresAt: Date.now() + tokens.expires_in * 1000
+   * };
+   * const sealed = await seal(rtData, config.cookieSecret);
+   * response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealed, COOKIE_OPTIONS);
+   * ```
+   */
   REFRESH_TOKEN: 'latch_rt',
-  /** Encrypted PKCE data (code_verifier, state, nonce) - short-lived (10 min) */
+  
+  /**
+   * Stores encrypted PKCE flow data - TEMPORARY (10 min expiry)
+   * 
+   * Contains: `{ codeVerifier: string, state: string, nonce: string, returnTo?: string }`
+   * 
+   * Automatically deleted after OAuth callback completes.
+   * 
+   * @example
+   * ```typescript
+   * const pkceData: PKCEData = {
+   *   codeVerifier,
+   *   state,
+   *   nonce,
+   *   returnTo: '/dashboard'
+   * };
+   * const sealed = await seal(pkceData, config.cookieSecret);
+   * response.cookies.set(COOKIE_NAMES.PKCE_DATA, sealed, {
+   *   ...COOKIE_OPTIONS,
+   *   maxAge: 60 * 10  // 10 minutes
+   * });
+   * ```
+   */
   PKCE_DATA: 'latch_pkce',
-  /** Encrypted ID token / user session data */
+  
+  /**
+   * Stores encrypted DECODED user object from verifyIdToken() (~300 bytes)
+   * 
+   * ⚠️ **Does NOT store the raw ID token JWT!** Stores the decoded/verified user object.
+   * 
+   * Contains: `LatchUser { sub, email?, name?, preferred_username?, iat, exp }`
+   * 
+   * @example
+   * ```typescript
+   * // ✅ CORRECT: Store decoded user object
+   * const user = await verifyIdToken(tokens.id_token, jwksUri, clientId, nonce);
+   * const sealed = await seal(user, config.cookieSecret);
+   * response.cookies.set(COOKIE_NAMES.ID_TOKEN, sealed, COOKIE_OPTIONS);
+   * 
+   * // ❌ WRONG: Don't store the raw JWT string
+   * const sealed = await seal(tokens.id_token, config.cookieSecret);
+   * 
+   * // ❌ WRONG: Don't store tokens here
+   * const sealed = await seal({ user, accessToken, refreshToken }, config.cookieSecret);
+   * ```
+   */
   ID_TOKEN: 'latch_id',
 } as const;
 
