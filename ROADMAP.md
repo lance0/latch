@@ -2,9 +2,9 @@
 
 This document tracks the development progress and planned features for Latch.
 
-**Last Updated:** 2025-10-23
+**Last Updated:** 2025-11-04
 **Current Version:** v0.3.0
-**Status:** Ready for npm publication, preparing for v1.0 GA
+**Status:** Published to npm! Preparing for v1.0 GA
 **Timeline:** v1.0 GA targeted for Q1 2026
 
 ---
@@ -16,7 +16,8 @@ This document tracks the development progress and planned features for Latch.
 | Phase 1 | v0.1 | ✅ Complete | 2025-10-21 | Core OIDC, PKCE, encrypted cookies |
 | Phase 2 | v0.2 | ✅ Complete | 2025-10-22 | Enhanced DX, security tests, auto-refresh |
 | Phase 3 | v0.3 | ✅ Complete | 2025-10-23 | Monorepo, CLI, dual auth modes, compliance docs |
-| Phase 4 | v1.0 | 🚧 In Progress | TBD | OBO flows, security audit, npm publication |
+| Phase 3.5 | v0.3.0 | ✅ Complete | 2025-11-04 | **Published to npm!** License updated to Apache 2.0 |
+| Phase 4 | v1.0 | 🚧 In Progress | TBD | OBO flows, security audit, advanced features |
 
 **Actual Effort (v0.1-v0.3):** ~200 hours over 3 months
 **Remaining to GA:** ~100-150 hours
@@ -173,7 +174,8 @@ Monorepo architecture, CLI tooling, dual authentication modes, and compliance do
 - **Packages:** 2 (`@lance0/latch`, `@lance0/latch-cli`)
 - **Tests:** 135 passing
 - **Documentation:** 7 comprehensive markdown files
-- **Package size:** 61KB (latch), 7KB (latch-cli)
+- **Package size:** 186KB (latch), 11KB (latch-cli)
+- **npm Published:** 2025-11-04 ✅
 
 ---
 
@@ -229,13 +231,12 @@ Production-ready release with security audit, advanced features, and ecosystem s
   - [ ] Add "Security Reviewed" badge to README
   - **Rationale:** Build trust for government adoption
 
-- [ ] **npm Publication** (5 hours)
-  - [ ] Final testing on fresh VM
-  - [ ] Publish `@lance0/latch@1.0.0` to npm
-  - [ ] Publish `@lance0/latch-cli@1.0.0` to npm
-  - [ ] Create GitHub release with changelog
-  - [ ] Announce publicly (HN, Reddit, Dev.to)
-  - **Rationale:** Make library accessible to community
+- [x] **npm Publication** ✅ (Completed 2025-11-04)
+  - [x] Published `@lance0/latch@0.3.0` to npm
+  - [x] Published `@lance0/latch-cli@0.3.0` to npm
+  - [x] Updated license to Apache 2.0
+  - [ ] Create GitHub release with changelog (pending)
+  - [ ] Announce publicly (HN, Reddit, Dev.to) (pending)
 
 #### 🟡 Medium Priority (Nice-to-Have for GA)
 
@@ -364,8 +365,8 @@ Features that extend beyond core Next.js focus.
 |---------|----------|--------|------------|
 | v0.1.0 | 2025-10-21 | ✅ Complete | Core OIDC flow, PKCE, encrypted cookies |
 | v0.2.0 | 2025-10-22 | ✅ Complete | Enhanced DX, security tests, auto-refresh |
-| v0.3.0 | 2025-10-23 | ✅ Complete | Monorepo, CLI, dual auth modes, compliance docs |
-| v1.0.0 | Q1 2026 | 🚧 In Progress | OBO flows, security audit, npm publication |
+| v0.3.0 | 2025-11-04 | ✅ Complete | Monorepo, CLI, dual auth modes, npm published! |
+| v1.0.0 | Q1 2026 | 🚧 In Progress | OBO flows, security audit, GitHub public |
 
 ---
 
@@ -485,12 +486,16 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
 
 ## Next Steps
 
-### This Week (Current: v0.3 Complete)
+### This Week (Current: v0.3 Published!)
 1. ✅ Monorepo architecture
 2. ✅ CLI package
 3. ✅ Compliance documentation
-4. ✅ Critical pre-publish fixes
-5. 🔜 Begin OBO flow implementation
+4. ✅ Published to npm (2025-11-04)
+5. ✅ Updated license to Apache 2.0
+6. ✅ Cleaned internal docs from repo
+7. 🔜 Make GitHub repo public
+8. 🔜 Create GitHub release
+9. 🔜 Begin OBO flow implementation
 
 ### Next 12 Weeks (v1.0)
 1. Implement OBO/token exchange helpers
