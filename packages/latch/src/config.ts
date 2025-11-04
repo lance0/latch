@@ -260,13 +260,54 @@ export function validateScopes(scopes: string[], cloud: LatchCloud): void {
 }
 
 /**
- * Cookie configuration
+ * Recommended scopes for different use cases
+ * 
+ * @example
+ * ```typescript
+ * // In .env.local, use one of:
+ * LATCH_SCOPES=openid profile email offline_access User.Read  // Recommended
+ * // OR
+ * import { RECOMMENDED_SCOPES } from '@lance0/latch';
+ * const scopes = RECOMMENDED_SCOPES.FULL.split(' ');
+ * ```
+ */
+export const RECOMMENDED_SCOPES = {
+  /** Minimal: Just authentication - ID token only, no email, no refresh token */
+  MINIMAL: 'openid profile',
+
+  /** Standard: Auth + email + offline access (RECOMMENDED) */
+  STANDARD: 'openid profile email offline_access',
+
+  /** Full: Everything including Microsoft Graph User.Read */
+  FULL: 'openid profile email offline_access User.Read',
+} as const;
+
+/**
+ * Cookie names used by Latch for storing authentication data
+ * 
+ * @example
+ * ```typescript
+ * // Get PKCE data from cookie
+ * const pkceCookie = request.cookies.get(COOKIE_NAMES.PKCE_DATA);
+ * 
+ * // Set refresh token cookie
+ * response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealed, COOKIE_OPTIONS);
+ * ```
  */
 export const COOKIE_NAMES = {
+  /** Encrypted refresh token cookie */
   REFRESH_TOKEN: 'latch_rt',
+  /** Encrypted PKCE data (code_verifier, state, nonce) - short-lived (10 min) */
   PKCE_DATA: 'latch_pkce',
+  /** Encrypted ID token / user session data */
   ID_TOKEN: 'latch_id',
 } as const;
+
+/**
+ * Common mistake helper - use COOKIE_NAMES instead
+ * @deprecated Import and use COOKIE_NAMES directly
+ */
+export const CookieNames = COOKIE_NAMES;
 
 export const COOKIE_OPTIONS = {
   httpOnly: true,

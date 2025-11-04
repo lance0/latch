@@ -58,6 +58,49 @@ export function validateReturnUrl(returnTo: string | null | undefined, baseUrl: 
 
 /**
  * Verify and decode ID token using JWKS
+ * 
+ * ⚠️ **WARNING:** Only `sub`, `iat`, and `exp` are guaranteed to be present in the returned user object.
+ * The `email`, `name`, and `preferred_username` fields **may be undefined** depending on:
+ * - Azure AD configuration
+ * - Requested scopes (need `email` and `profile` scopes)
+ * - User account type (guest users may not have email)
+ * 
+ * @param idToken - ID token JWT from token response
+ * @param jwksUri - JWKS endpoint URL for token verification (from getAzureEndpoints)
+ * @param clientId - Azure AD Application (client) ID - must match token audience
+ * @param nonce - Nonce value from PKCE data - must match token nonce claim
+ * @returns Decoded and verified user information from ID token
+ * 
+ * @example
+ * ```typescript
+ * // In your callback route:
+ * const config = getLatchConfig();
+ * const endpoints = getAzureEndpoints(config.cloud, config.tenantId);
+ * 
+ * // Safe: use requireIdToken helper
+ * const user = await verifyIdToken(
+ *   requireIdToken(tokens),  // Throws clear error if missing
+ *   endpoints.jwksUri,
+ *   config.clientId,
+ *   pkceData.nonce
+ * );
+ * 
+ * // ❌ BAD: email might be undefined
+ * console.log(user.email);
+ * 
+ * // ✅ GOOD: Use getUserDisplayName helper
+ * import { getUserDisplayName } from '@lance0/latch';
+ * const displayName = getUserDisplayName(user);  // Always defined
+ * 
+ * // ✅ GOOD: Or use fallback chain
+ * const displayName = user.email || user.preferred_username || user.name || user.sub;
+ * ```
+ * 
+ * @throws {LatchError} LATCH_ID_TOKEN_INVALID if verification fails
+ * @throws {LatchError} LATCH_NONCE_MISMATCH if nonce doesn't match
+ * 
+ * @see {@link requireIdToken} - Helper to validate tokens.id_token exists
+ * @see {@link getUserDisplayName} - Helper to get best available display name
  */
 export async function verifyIdToken(
   idToken: string,
@@ -65,6 +108,32 @@ export async function verifyIdToken(
   clientId: string,
   nonce: string
 ): Promise<LatchUser> {
+  // Runtime validation
+  if (!idToken || typeof idToken !== 'string') {
+    throw new LatchError(
+      'LATCH_INVALID_PARAMETER',
+      `[Latch] verifyIdToken: 'idToken' must be a non-empty string, got ${typeof idToken}`
+    );
+  }
+  if (!jwksUri || typeof jwksUri !== 'string') {
+    throw new LatchError(
+      'LATCH_INVALID_PARAMETER',
+      `[Latch] verifyIdToken: 'jwksUri' must be a non-empty string, got ${typeof jwksUri}`
+    );
+  }
+  if (!clientId || typeof clientId !== 'string') {
+    throw new LatchError(
+      'LATCH_INVALID_PARAMETER',
+      `[Latch] verifyIdToken: 'clientId' must be a non-empty string, got ${typeof clientId}`
+    );
+  }
+  if (!nonce || typeof nonce !== 'string') {
+    throw new LatchError(
+      'LATCH_INVALID_PARAMETER',
+      `[Latch] verifyIdToken: 'nonce' must be a non-empty string, got ${typeof nonce}`
+    );
+  }
+
   try {
     // Fetch JWKS
     const JWKS = jose.createRemoteJWKSet(new URL(jwksUri));

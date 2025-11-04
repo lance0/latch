@@ -1,6 +1,6 @@
 {
   "name": "@lance0/latch",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support",
   "license": "Apache-2.0",
   "author": "lance0",

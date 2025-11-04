@@ -335,6 +335,23 @@ LATCH_SCOPES=openid profile User.Read`,
     ],
     example: 'Provide either clientSecret or clientCertificate in config',
   },
+
+  LATCH_INVALID_PARAMETER: {
+    title: 'Invalid Function Parameter',
+    steps: [
+      'A required parameter was missing or had the wrong type',
+      'Check the error message for which parameter is invalid',
+      'Common mistakes:',
+      '  • Passing an object instead of positional parameters',
+      '  • Missing required parameters',
+      '  • Passing undefined or null',
+      '',
+      'Example correct usage:',
+      '  exchangeCodeForTokens(code, verifier, redirectUri, clientId, tenantId, cloud, secret)',
+      '',
+      'See JSDoc comments in your IDE for parameter details',
+    ],
+  },
 };
 
 /**

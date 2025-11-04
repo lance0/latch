@@ -26,8 +26,19 @@ export {
   validateScopes,
   buildLogoutUrl,
   COOKIE_NAMES,
+  CookieNames, // Alias for common mistake
   COOKIE_OPTIONS,
+  RECOMMENDED_SCOPES,
 } from './config';
+
+// Helpers
+export {
+  getUserDisplayName,
+  getUserInitials,
+  requireIdToken,
+  requireRefreshToken,
+  checkScopes,
+} from './helpers';
 
 // Crypto
 export { seal, unseal } from './crypto/seal';
