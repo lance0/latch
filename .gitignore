@@ -57,3 +57,7 @@ next-env.d.ts
 
 # AI Tools
 .claude
+
+# Internal/Planning Docs (keep locally, don't publish)
+NEXTAUTH_CONTRIBUTION_ROADMAP.md
+PRE_PUBLISH_ROADMAP.md
