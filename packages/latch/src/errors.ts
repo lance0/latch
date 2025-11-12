@@ -352,6 +352,25 @@ LATCH_SCOPES=openid profile User.Read`,
       'See JSDoc comments in your IDE for parameter details',
     ],
   },
+
+  LATCH_UNAUTHORIZED: {
+    title: 'Authentication Required',
+    steps: [
+      'This operation requires an authenticated user',
+      'The user is not currently signed in or the session has expired',
+      '',
+      'Solutions:',
+      '  • Redirect user to sign in: window.location.href = "/api/latch/start"',
+      '  • Check authentication before calling: await getServerSession(secret)',
+      '  • Handle the error in your UI and show sign-in prompt',
+      '',
+      'Common causes:',
+      '  • Session expired (7-day lifetime)',
+      '  • User signed out',
+      '  • Cookies were cleared',
+      '  • Called from unauthenticated context',
+    ],
+  },
 };
 
 /**

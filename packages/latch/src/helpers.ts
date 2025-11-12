@@ -1,4 +1,7 @@
-import { LatchUser, TokenResponse, LatchError } from './types';
+import { cookies } from 'next/headers';
+import { LatchUser, TokenResponse, LatchError, RefreshTokenData, LatchSession } from './types';
+import { unseal } from './crypto/seal';
+import { COOKIE_NAMES } from './config';
 
 /**
  * Get the best available display name for a user
@@ -174,4 +177,155 @@ export function checkScopes(scopes: string[]): {
     hasRefreshToken: hasOfflineAccess,
     warnings,
   };
+}
+
+/**
+ * Get the current user session in Server Actions or Server Components
+ * 
+ * This function reads the session from cookies and validates it. Use this in Server Actions
+ * or Server Components to check if a user is authenticated.
+ * 
+ * **Important:** Requires LATCH_COOKIE_SECRET environment variable.
+ * 
+ * @param cookieSecret - Cookie encryption secret (from getLatchConfig().cookieSecret)
+ * @returns LatchSession with user object if authenticated, null if not
+ * 
+ * @example
+ * ```typescript
+ * // In a Server Action
+ * 'use server';
+ * 
+ * import { getServerSession } from '@lance0/latch';
+ * 
+ * export async function getProfile() {
+ *   const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+ *   
+ *   if (!session.isAuthenticated) {
+ *     throw new Error('Not authenticated');
+ *   }
+ *   
+ *   return session.user;
+ * }
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // In a Server Component
+ * import { getServerSession } from '@lance0/latch';
+ * 
+ * export default async function ProfilePage() {
+ *   const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+ *   
+ *   if (!session.isAuthenticated) {
+ *     redirect('/api/latch/start');
+ *   }
+ *   
+ *   return <div>Welcome {session.user.name}!</div>;
+ * }
+ * ```
+ */
+export async function getServerSession(cookieSecret: string): Promise<LatchSession> {
+  try {
+    const cookieStore = await cookies();
+    
+    // Get ID token and refresh token from cookies
+    const idTokenCookie = cookieStore.get(COOKIE_NAMES.ID_TOKEN);
+    const refreshTokenCookie = cookieStore.get(COOKIE_NAMES.REFRESH_TOKEN);
+
+    if (!idTokenCookie || !refreshTokenCookie) {
+      return {
+        user: null,
+        isAuthenticated: false,
+      };
+    }
+
+    const user = await unseal<LatchUser>(idTokenCookie.value, cookieSecret);
+    const refreshTokenData = await unseal<RefreshTokenData>(
+      refreshTokenCookie.value,
+      cookieSecret
+    );
+
+    // Check if refresh token is expired (7-day session lifetime)
+    const now = Date.now();
+    if (refreshTokenData.expiresAt < now) {
+      return {
+        user: null,
+        isAuthenticated: false,
+      };
+    }
+
+    return {
+      user,
+      isAuthenticated: true,
+    };
+  } catch (error) {
+    // If decryption fails or any error, return unauthenticated
+    return {
+      user: null,
+      isAuthenticated: false,
+    };
+  }
+}
+
+/**
+ * Require authentication in Server Actions or Server Components
+ * 
+ * Throws an error if user is not authenticated. Use this as a guard at the start
+ * of Server Actions that require authentication.
+ * 
+ * @param cookieSecret - Cookie encryption secret (from getLatchConfig().cookieSecret)
+ * @returns LatchUser object (guaranteed to exist)
+ * @throws {LatchError} if user is not authenticated
+ * 
+ * @example
+ * ```typescript
+ * // In a Server Action
+ * 'use server';
+ * 
+ * import { requireAuth } from '@lance0/latch';
+ * 
+ * export async function deleteAccount() {
+ *   const user = await requireAuth(process.env.LATCH_COOKIE_SECRET!);
+ *   
+ *   // user is guaranteed to exist here
+ *   await db.user.delete({ where: { id: user.sub } });
+ *   
+ *   return { success: true };
+ * }
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // In a Server Action with custom error
+ * 'use server';
+ * 
+ * import { requireAuth } from '@lance0/latch';
+ * 
+ * export async function updateProfile(formData: FormData) {
+ *   const user = await requireAuth(process.env.LATCH_COOKIE_SECRET!);
+ *   
+ *   const name = formData.get('name') as string;
+ *   await db.user.update({
+ *     where: { id: user.sub },
+ *     data: { name }
+ *   });
+ *   
+ *   return { success: true };
+ * }
+ * ```
+ */
+export async function requireAuth(cookieSecret: string): Promise<LatchUser> {
+  const session = await getServerSession(cookieSecret);
+  
+  if (!session.isAuthenticated || !session.user) {
+    throw new LatchError(
+      'LATCH_UNAUTHORIZED',
+      '[Latch] Authentication required.\n\n' +
+      'This Server Action requires an authenticated user.\n\n' +
+      'Make sure the user is signed in before calling this action.\n' +
+      'You can check authentication status using getServerSession() first.'
+    );
+  }
+  
+  return session.user;
 }

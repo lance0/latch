@@ -39,6 +39,8 @@ export {
   requireIdToken,
   requireRefreshToken,
   checkScopes,
+  getServerSession,
+  requireAuth,
 } from './helpers';
 
 // Crypto

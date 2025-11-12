@@ -64,9 +64,17 @@ function DashboardContent() {
         <div className="space-y-6">
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-2xl font-bold mb-4">Welcome to Latch</h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               This is a protected dashboard page. You&apos;re successfully authenticated!
             </p>
+            <div className="flex gap-2">
+              <a
+                href="/dashboard/server-actions-demo"
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                View Server Actions Demo
+              </a>
+            </div>
           </div>
 
           <div className="bg-white shadow rounded-lg p-6">

@@ -269,6 +269,28 @@ response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealedRT, COOKIE_OPTIONS);
 
 **Automatic Size Validation:** Latch's `seal()` function warns at 3.5KB and errors at 4KB with helpful guidance. See the detailed JSDoc on `COOKIE_NAMES` for more information.
 
+## Server Actions (Next.js 15+)
+
+Latch provides helpers for using authentication with Next.js Server Actions:
+
+```typescript
+// app/actions/profile.ts
+'use server';
+
+import { requireAuth } from '@lance0/latch';
+
+export async function getProfile() {
+  const user = await requireAuth(process.env.LATCH_COOKIE_SECRET!);
+  return { name: user.name, email: user.email };
+}
+```
+
+**Available helpers:**
+- `getServerSession(cookieSecret)` - Get current session (handles unauthenticated)
+- `requireAuth(cookieSecret)` - Require authentication (throws if not authenticated)
+
+**See the full guide:** [Server Actions Documentation](./docs/SERVER_ACTIONS.md)
+
 ## API Routes
 
 Latch provides these authentication endpoints:
