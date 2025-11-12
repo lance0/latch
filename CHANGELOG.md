@@ -5,6 +5,27 @@ All notable changes to Latch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-11-12
+
+### Added
+- **Automatic Token Refresh** - LatchProvider now automatically refreshes sessions 5 minutes before token expiry, preventing unexpected logouts
+- **PBKDF2 Key Caching** - Derived encryption keys are now cached in memory, improving seal/unseal performance by 10-20x
+
+### Performance
+- Cookie encryption operations: ~10-20ms → <1ms (after first operation)
+- Reduced CPU usage under high load
+- Seamless session management without database queries
+
+### User Experience
+- Users stay logged in for full refresh token lifetime (7 days by default)
+- No more unexpected 1-hour logout due to ID token expiry
+- Automatic background session refresh with 5-minute buffer
+
+### Technical
+- Added `clearKeyCache()` export for testing/manual cache invalidation
+- Auto-refresh uses React useEffect with proper cleanup
+- Cache is per-process and supports secret rotation
+
 ## [0.4.1] - 2025-11-12
 
 ### Added

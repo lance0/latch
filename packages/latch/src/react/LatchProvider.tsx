@@ -52,6 +52,30 @@ export function LatchProvider({ children }: LatchProviderProps) {
     fetchSession();
   }, [fetchSession]);
 
+  // Auto-refresh session before token expiry
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    // Token expiry is in seconds (Unix timestamp), convert to milliseconds
+    const tokenExpiry = user.exp * 1000;
+    const refreshBuffer = 5 * 60 * 1000; // Refresh 5 minutes before expiry
+    const refreshAt = tokenExpiry - refreshBuffer;
+    const timeUntilRefresh = refreshAt - Date.now();
+
+    // If token expires in less than 5 minutes, refresh immediately
+    if (timeUntilRefresh <= 0) {
+      fetchSession();
+      return;
+    }
+
+    // Set timer to refresh before expiry
+    const timer = setTimeout(() => {
+      fetchSession();
+    }, timeUntilRefresh);
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, user, fetchSession]);
+
   const signIn = useCallback((returnTo?: string) => {
     const params = new URLSearchParams();
     if (returnTo) {
