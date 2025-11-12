@@ -349,6 +349,43 @@ pnpm lint
 pnpm build
 ```
 
+## Migrating to Latch
+
+Coming from another authentication library? We've got you covered:
+
+- **[Migrating from NextAuth.js](./docs/MIGRATION_FROM_NEXTAUTH.md)** - Step-by-step guide with code comparisons
+- **[Migrating from MSAL](./docs/MIGRATION_FROM_MSAL.md)** - Move from MSAL Browser/React to Latch
+
+### Quick Comparison
+
+| Feature | Latch | NextAuth.js | MSAL |
+|---------|-------|-------------|------|
+| **Best For** | Azure AD + Next.js | Multi-provider auth | Browser/SPA apps |
+| **Azure Government** | ✅ Built-in | ⚠️ Custom provider | ⚠️ Manual config |
+| **Token Storage** | HttpOnly cookies | Database or JWT | LocalStorage |
+| **PKCE** | ✅ Always | ✅ Optional | ⚠️ Manual config |
+| **Server Actions** | ✅ Native | ⚠️ Workarounds | ❌ Client-only |
+| **Setup Complexity** | Low | Medium-High | High |
+| **Security** | ✅ Server-side tokens | ⚠️ Depends on config | ⚠️ Client-side tokens |
+| **Next.js Integration** | ✅ Native | ✅ Good | ⚠️ Additional setup |
+| **Multiple Providers** | ❌ Azure AD only | ✅ 50+ providers | ❌ Microsoft only |
+
+**Choose Latch when:**
+- Using Azure AD exclusively
+- Need government cloud support
+- Want server-side token security
+- Building Next.js App Router apps
+
+**Choose NextAuth.js when:**
+- Need multiple OAuth providers
+- Require database sessions
+- Using Pages Router
+
+**Choose MSAL when:**
+- Building pure client-side SPA
+- Need B2C or advanced scenarios
+- Not using Next.js
+
 ## Documentation
 
 ### 📚 Guides
@@ -380,6 +417,22 @@ pnpm build
   - Token issues
   - Cloud-specific problems
   - Debugging tips
+
+### 🔄 Migration Guides
+
+- **[Migrating from NextAuth.js](./docs/MIGRATION_FROM_NEXTAUTH.md)** - Complete migration guide
+  - Why migrate and when to stay
+  - Step-by-step migration process
+  - Side-by-side code comparisons
+  - Feature mapping tables
+  - Troubleshooting migration issues
+
+- **[Migrating from MSAL](./docs/MIGRATION_FROM_MSAL.md)** - MSAL Browser/React to Latch
+  - Security improvements over MSAL
+  - Simplified configuration
+  - Token handling differences
+  - Quick reference API mapping
+  - Complete code examples
 
 ### ⚙️ Configuration Templates
 
