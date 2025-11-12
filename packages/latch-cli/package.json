@@ -1,6 +1,6 @@
 {
   "name": "@lance0/latch-cli",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "description": "CLI tools for Latch authentication library - generate secrets and interactive setup wizard",
   "license": "Apache-2.0",
   "author": "lance0",

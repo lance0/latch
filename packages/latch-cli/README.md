@@ -16,7 +16,7 @@ npx @lance0/latch-cli [command]
 
 ## Commands
 
-### `generate-secret`
+### `generate-secret` (alias: `secret`)
 
 Generate a cryptographically secure random secret for `LATCH_COOKIE_SECRET`:
 
@@ -30,12 +30,6 @@ npx @lance0/latch-cli generate-secret
 #
 # Add this to your .env.local file
 # Never commit this secret to version control!
-```
-
-**Alias:** `secret`
-
-```bash
-npx @lance0/latch-cli secret
 ```
 
 ### `init`
@@ -119,19 +113,38 @@ LATCH_DEBUG=false
 NEXTAUTH_URL=http://localhost:3000
 ```
 
-**Client Type Modes:**
+### `scaffold`
 
-- **Public Client (PKCE)**: No client secret needed. Uses PKCE S256 flow. Best for SPAs and mobile apps.
-- **Confidential Client (client_secret)**: Requires client secret. Uses client_secret + PKCE. Best for Web apps and existing Azure AD "Web" registrations.
+Copy API routes and Server Actions from example apps.
+
+```bash
+latch scaffold
+latch scaffold --example commercial
+```
+
+### `validate`
+
+Validate `.env.local` for common mistakes (UUIDs, cloud/scope mismatches, etc).
+
+```bash
+latch validate
+```
+
+### `doctor`
+
+Run diagnostics on your Latch setup (checks install, config, routes, LatchProvider).
+
+```bash
+latch doctor
+```
 
 ## Features
 
-✅ **Validates UUIDs** - Ensures Client ID and Tenant ID are valid UUID format
-✅ **Auto-generates secrets** - Creates cryptographically secure 32-byte secrets
-✅ **Cloud-specific defaults** - Provides appropriate defaults for each Azure cloud
-✅ **Government cloud warnings** - Reminds you about GCC-High/DoD requirements
-✅ **Client type selection** - Guides you through PKCE vs client_secret setup
-✅ **Password masking** - Client secrets are masked during input
+✅ Interactive wizards with validation
+✅ Scaffold routes from examples  
+✅ Validate configuration  
+✅ Diagnose setup issues
+✅ Auto-generate secure secrets
 
 ## Usage in Monorepo
 
@@ -152,13 +165,4 @@ node packages/latch-cli/dist/index.js init
 
 ## License
 
-MIT - see [LICENSE](LICENSE) file for details
-
-## Author
-
-[lance0](https://github.com/lance0)
-
-## Support
-
-- [GitHub Issues](https://github.com/lance0/latch/issues)
-- [Documentation](https://github.com/lance0/latch)
+Apache-2.0
