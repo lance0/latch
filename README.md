@@ -97,7 +97,35 @@ Latch supports two authentication modes:
 
 Both modes are equally secure. See [Authentication Setup Guide](./docs/AUTHENTICATION_SETUP.md) for detailed comparison and Azure AD configuration steps.
 
-### 4. Wrap your app with LatchProvider
+### 4. Create API routes
+
+Latch requires five API routes for authentication. Copy these from the example app:
+
+```
+app/api/latch/
+├── start/route.ts       # Initiates OAuth flow
+├── callback/route.ts    # Handles OAuth callback
+├── session/route.ts     # Returns current user
+├── refresh/route.ts     # Refreshes access token
+└── logout/route.ts      # Clears session
+```
+
+**Quick setup:**
+```bash
+# Copy routes from example app
+cp -r node_modules/@lance0/latch/../../apps/example-app/app/api/latch app/api/
+```
+
+Or see the [example app](./apps/example-app/app/api/latch/) for reference implementations.
+
+**What each route does:**
+- `start` - Generates PKCE challenge and redirects to Azure AD
+- `callback` - Exchanges authorization code for tokens, sets cookies
+- `session` - Returns user object from cookie (checks if authenticated)
+- `refresh` - Gets fresh access token using refresh token
+- `logout` - Clears cookies and signs out of Azure AD (SSO logout)
+
+### 5. Wrap your app with LatchProvider
 
 ```tsx
 import { LatchProvider } from '@lance0/latch/react';
@@ -113,7 +141,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-### 5. Use authentication in your components
+### 6. Use authentication in your components
 
 ```tsx
 'use client';
@@ -136,7 +164,7 @@ export default function Home() {
 }
 ```
 
-### 6. Protect routes
+### 7. Protect routes
 
 **Option A: Component-level protection**
 
@@ -212,6 +240,34 @@ export function UserProfile() {
 ```
 
 **⚠️ Security Note:** Direct Token mode exposes access tokens to client JavaScript. Only use for non-sensitive operations.
+
+## Cookie Storage Pattern
+
+Latch uses **three separate cookies** to store authentication data while staying under browser limits:
+
+| Cookie | Contents | Size | Duration |
+|--------|----------|------|----------|
+| `latch_id` | Decoded user object (email, name, sub) | ~300 bytes | 7 days |
+| `latch_rt` | Refresh token + expiry timestamp | ~2700 bytes | 7 days |
+| `latch_pkce` | PKCE flow data (temporary) | ~250 bytes | 10 minutes |
+
+**Why three cookies?** Browsers have a 4KB (4096 bytes) limit per cookie. Azure AD tokens are large (~1500-2000 bytes each), so storing everything in one cookie would exceed the limit and fail silently.
+
+**⚠️ Common Mistake:**
+```typescript
+// ❌ WRONG: Everything in one cookie (exceeds 4KB!)
+const sessionData = await seal({ user, accessToken, refreshToken }, secret);
+response.cookies.set(COOKIE_NAMES.ID_TOKEN, sessionData, COOKIE_OPTIONS);
+
+// ✅ CORRECT: Separate cookies (as shown in example app)
+const sealedUser = await seal(user, config.cookieSecret);
+response.cookies.set(COOKIE_NAMES.ID_TOKEN, sealedUser, COOKIE_OPTIONS);
+
+const sealedRT = await seal({ refreshToken, expiresAt }, config.cookieSecret);
+response.cookies.set(COOKIE_NAMES.REFRESH_TOKEN, sealedRT, COOKIE_OPTIONS);
+```
+
+**Automatic Size Validation:** Latch's `seal()` function warns at 3.5KB and errors at 4KB with helpful guidance. See the detailed JSDoc on `COOKIE_NAMES` for more information.
 
 ## API Routes
 

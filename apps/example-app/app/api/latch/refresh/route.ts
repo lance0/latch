@@ -12,8 +12,47 @@ import {
 
 /**
  * POST /api/latch/refresh
- * Refreshes the access token using the refresh token
- * Returns the new access token (for Direct Token mode)
+ * 
+ * Refreshes the access token using the stored refresh token.
+ * 
+ * **What this route does:**
+ * 1. Reads refresh token from cookie
+ * 2. Calls Azure AD token endpoint to get fresh access token
+ * 3. Returns new access token (expires in 1 hour)
+ * 4. Updates refresh token cookie if Azure AD issues a new one
+ * 
+ * **When to call this route:**
+ * - Before making Microsoft Graph API calls (to ensure fresh token)
+ * - When access token expires (1 hour lifetime)
+ * - In your API routes that need to call downstream APIs
+ * 
+ * **Usage Pattern (Direct Token Mode):**
+ * ```typescript
+ * // Client-side: Get fresh access token
+ * const response = await fetch('/api/latch/refresh', { method: 'POST' });
+ * const { access_token } = await response.json();
+ * 
+ * // Use token for Microsoft Graph
+ * const userProfile = await fetch('https://graph.microsoft.us/v1.0/me', {
+ *   headers: { Authorization: `Bearer ${access_token}` }
+ * });
+ * ```
+ * 
+ * **Usage Pattern (Secure Proxy Mode - Recommended):**
+ * ```typescript
+ * // Server-side API route: Refresh and proxy in one step
+ * const refreshTokenCookie = request.cookies.get(COOKIE_NAMES.REFRESH_TOKEN);
+ * const rtData = await unseal(refreshTokenCookie.value, secret);
+ * const tokens = await refreshAccessToken(rtData.refreshToken, ...);
+ * 
+ * // Call Graph directly from server (token never exposed to client)
+ * const userProfile = await fetch('https://graph.microsoft.us/v1.0/me', {
+ *   headers: { Authorization: `Bearer ${tokens.access_token}` }
+ * });
+ * ```
+ * 
+ * **Error Handling:**
+ * Returns 401 if refresh token is missing or invalid. Client should redirect to login.
  */
 export async function POST(request: NextRequest) {
   try {

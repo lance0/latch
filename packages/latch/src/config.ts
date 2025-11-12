@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { LatchConfig, LatchCloud, AzureEndpoints, ClientCertificate, TokenCacheOptions } from './types';
 import { validateLatchConfig, createLatchError } from './errors';
 
@@ -222,6 +223,35 @@ export function buildLogoutUrl(
   const logoutUrl = new URL(endpoints.logoutUrl);
   logoutUrl.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri);
   return logoutUrl.toString();
+}
+
+/**
+ * Clear all Latch authentication cookies from a NextResponse
+ * 
+ * Helper function to delete all Latch cookies at once. Use this in your logout route
+ * to ensure complete session cleanup.
+ * 
+ * @param response - NextResponse object to clear cookies from
+ * 
+ * @example
+ * ```typescript
+ * // In your logout route
+ * import { clearLatchCookies, buildLogoutUrl } from '@lance0/latch';
+ * 
+ * export async function GET(request: NextRequest) {
+ *   const config = getLatchConfig();
+ *   const logoutUrl = buildLogoutUrl(config.cloud, config.tenantId, baseUrl);
+ *   
+ *   const response = NextResponse.redirect(logoutUrl);
+ *   clearLatchCookies(response); // Delete all Latch cookies
+ *   return response;
+ * }
+ * ```
+ */
+export function clearLatchCookies(response: NextResponse): void {
+  response.cookies.delete(COOKIE_NAMES.REFRESH_TOKEN);
+  response.cookies.delete(COOKIE_NAMES.ID_TOKEN);
+  response.cookies.delete(COOKIE_NAMES.PKCE_DATA);
 }
 
 /**

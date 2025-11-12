@@ -66,9 +66,22 @@ describe('seal and unseal', () => {
     expect(unsealed).toBe(data);
   });
 
-  it('should handle large objects', async () => {
+  it('should reject objects that exceed 4KB cookie limit', async () => {
     const data = {
       users: Array.from({ length: 100 }, (_, i) => ({
+        id: i,
+        name: `User ${i}`,
+        email: `user${i}@example.com`,
+      })),
+    };
+
+    // This should throw because the sealed data exceeds 4KB
+    await expect(seal(data, secret)).rejects.toThrow('Cookie too large');
+  });
+
+  it('should handle moderately sized objects under 4KB', async () => {
+    const data = {
+      users: Array.from({ length: 10 }, (_, i) => ({
         id: i,
         name: `User ${i}`,
         email: `user${i}@example.com`,

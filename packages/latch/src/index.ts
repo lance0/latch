@@ -25,6 +25,7 @@ export {
   getAzureEndpoints,
   validateScopes,
   buildLogoutUrl,
+  clearLatchCookies,
   COOKIE_NAMES,
   CookieNames, // Alias for common mistake
   COOKIE_OPTIONS,
