@@ -1,0 +1,344 @@
+# Latch
+
+> Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support
+
+Version: 0.4.2
+License: Apache-2.0
+Repository: https://github.com/lance0/latch
+npm: @lance0/latch
+
+## Overview
+
+Latch is a lightweight, security-focused authentication library for Next.js that provides:
+- PKCE S256 OAuth 2.0 flow with Azure AD
+- Native support for Azure Government clouds (Commercial, GCC-High, DoD)
+- Encrypted HttpOnly cookies (AES-256-GCM)
+- Server Actions support with automatic token refresh
+- Token confusion attack prevention
+- No database required (stateless sessions)
+
+Target audience: Enterprise applications, internal tools, government contractors, B2B SaaS using Azure AD.
+
+## Documentation Structure
+
+### Core Documentation
+- README.md - Quick start, features, API overview
+- CHANGELOG.md - Version history and release notes
+- ROADMAP.md - Development status and future plans
+- SECURITY.md - Security policies, threat model, vulnerability reporting
+- TESTING_GUIDE.md - How to test authentication flows
+- TROUBLESHOOTING.md - Common issues and solutions
+
+### Technical Documentation (docs/)
+- docs/ARCHITECTURE.md - Technical implementation details
+- docs/API_REFERENCE.md - Complete API documentation
+- docs/AUTHENTICATION_SETUP.md - Public vs confidential client setup
+- docs/AUTHENTICATION_MODES.md - Secure Proxy vs Direct Token modes
+- docs/SERVER_ACTIONS.md - Server Actions patterns and production best practices
+- docs/ON_BEHALF_OF_FLOW.md - On-behalf-of token exchange (beta)
+- docs/MIGRATION_FROM_NEXTAUTH.md - Migrate from NextAuth.js
+- docs/MIGRATION_FROM_MSAL.md - Migrate from MSAL Browser/React
+
+### Package Documentation
+- packages/latch/README.md - Core library README
+- packages/latch-cli/README.md - CLI tools documentation
+- apps/README.md - Example applications comparison
+
+## Project Structure
+
+### Monorepo Layout
+```
+latch/
+├── packages/
+│   ├── latch/                  # Core authentication library (@lance0/latch)
+│   └── latch-cli/              # CLI tools (@lance0/latch-cli)
+├── apps/
+│   ├── example-app/            # Generic example (configurable cloud)
+│   ├── example-commercial/     # Azure Commercial preset
+│   └── example-gcc-high/       # Azure Government GCC-High preset
+├── docs/                       # Technical documentation
+└── __tests__/                  # Integration tests
+```
+
+### Core Library Structure (packages/latch/src/)
+```
+src/
+├── index.ts                    # Main exports
+├── types.ts                    # TypeScript type definitions
+├── config.ts                   # Configuration parsing and validation
+├── errors.ts                   # Error types and messages
+├── helpers.ts                  # Server-side helpers (getServerSession, requireAuth)
+├── crypto/
+│   ├── seal.ts                 # AES-GCM encryption with PBKDF2 key caching
+│   ├── pkce.ts                 # PKCE code verifier/challenge generation
+│   └── random.ts               # Cryptographically secure random generators
+├── oidc/
+│   ├── endpoints.ts            # Cloud-specific Azure AD endpoints
+│   ├── token.ts                # Token exchange and refresh
+│   ├── validation.ts           # ID token verification with JWKS
+│   ├── caeHelper.ts            # Continuous Access Evaluation
+│   └── oboHelpers.ts           # On-behalf-of flow helpers
+├── cache/
+│   └── tokenCache.ts           # LRU cache for OBO tokens
+├── obo/
+│   └── index.ts                # OBO flow exports (beta)
+└── react/
+    ├── LatchProvider.tsx       # React context provider with auto-refresh
+    ├── useLatch.tsx            # Authentication hook
+    ├── LatchGuard.tsx          # Component-level route protection
+    └── useAccessToken.tsx      # Direct token mode with auto-refresh
+```
+
+### CLI Structure (packages/latch-cli/src/)
+```
+src/
+├── index.ts                    # CLI entry point
+└── commands/
+    ├── generate-secret.ts      # Generate LATCH_COOKIE_SECRET
+    ├── init.ts                 # Interactive setup wizard
+    ├── scaffold.ts             # Copy API routes from examples
+    ├── validate.ts             # Validate .env.local configuration
+    └── doctor.ts               # Diagnose setup issues
+```
+
+### Example Apps Structure
+```
+apps/example-*/
+├── app/
+│   ├── api/latch/              # Required OAuth routes
+│   │   ├── start/route.ts      # Initiates OAuth flow with PKCE
+│   │   ├── callback/route.ts   # Handles OAuth callback
+│   │   ├── session/route.ts    # Returns current session
+│   │   ├── refresh/route.ts    # Refreshes access token
+│   │   └── logout/route.ts     # Clears session and logs out
+│   ├── actions/                # Server Actions examples
+│   │   ├── profile.ts          # Read operations
+│   │   └── updateSettings.ts   # Write operations
+│   ├── dashboard/              # Protected pages
+│   └── layout.tsx              # Root layout with LatchProvider
+├── middleware.ts               # Route protection
+└── .env.example                # Cloud-specific configuration template
+```
+
+## Key Concepts
+
+### Authentication Flow
+1. User clicks sign in → redirected to `/api/latch/start`
+2. PKCE code verifier/challenge generated, stored in encrypted cookie
+3. Redirected to Azure AD with PKCE challenge
+4. User authenticates with Azure AD
+5. Azure redirects to `/api/latch/callback` with authorization code
+6. Exchange code for tokens using PKCE verifier
+7. Verify ID token with JWKS
+8. Store user info and refresh token in encrypted cookies
+9. Redirect to app with authenticated session
+
+### Cookie Storage Pattern
+Latch uses 3 separate encrypted HttpOnly cookies to stay under browser limits:
+- `latch_id` - User object from ID token (~300 bytes)
+- `latch_rt` - Refresh token + expiry (~2700 bytes)
+- `latch_pkce` - PKCE flow data, temporary (~250 bytes)
+
+Each cookie is encrypted with AES-256-GCM using a derived key (PBKDF2, 100k iterations, cached in memory).
+
+### Automatic Token Refresh (v0.4.2+)
+LatchProvider automatically refreshes sessions 5 minutes before token expiry:
+- ID token typically expires in 1 hour
+- Refresh token valid for 7 days (configurable)
+- Background refresh keeps users logged in seamlessly
+- No action required from developers
+
+### Performance Optimization (v0.4.2+)
+PBKDF2-derived encryption keys are cached in memory:
+- First seal/unseal: ~10-20ms (key derivation)
+- Subsequent operations: <1ms (cached key)
+- 10-20x performance improvement
+- Cache is per-process, supports secret rotation
+
+### Security Features
+- Token confusion attack prevention (validates issuer matches tenant/cloud)
+- PKCE S256 (prevents authorization code interception)
+- State parameter (CSRF protection)
+- Nonce validation (replay attack prevention)
+- Return URL validation (open redirect prevention)
+- HttpOnly cookies (XSS protection)
+- SameSite=Lax (CSRF mitigation)
+- Configurable clock skew tolerance
+- JWKS-based token verification
+
+## Testing
+
+### Test Structure
+```
+packages/latch/__tests__/
+├── crypto/                     # Encryption, PKCE, random tests
+├── oidc/                       # Token validation, endpoint tests
+├── security/                   # Security-specific tests (CSRF, issuer validation)
+└── react/                      # React component tests
+```
+
+### Running Tests
+```bash
+cd packages/latch
+pnpm test                       # Run all tests
+pnpm test:watch                 # Watch mode
+pnpm typecheck                  # TypeScript check
+```
+
+Current: 164 tests passing (66 security-focused)
+
+## Common Tasks
+
+### For Users (Integrating Latch)
+1. Install: `npm install @lance0/latch`
+2. Configure: Create `.env.local` with Azure AD credentials
+3. Setup CLI: `npx @lance0/latch-cli init` (interactive wizard)
+4. Scaffold: `npx @lance0/latch-cli scaffold` (copies API routes)
+5. Validate: `npx @lance0/latch-cli validate` (checks config)
+6. Wrap app: Add `<LatchProvider>` to root layout
+7. Use hooks: `useLatch()` for authentication state
+
+### For Contributors (Developing Latch)
+1. Clone: `git clone https://github.com/lance0/latch.git`
+2. Install: `pnpm install`
+3. Build: `pnpm build` (builds all packages)
+4. Test: `cd packages/latch && pnpm test`
+5. Dev: `pnpm dev` (runs example app)
+
+### For Maintainers (Releasing)
+1. Update version in `packages/latch/package.json`
+2. Update `CHANGELOG.md`
+3. Run tests: `pnpm test`
+4. Build: `pnpm build`
+5. Commit: `git commit -m "v0.x.x - ..."`
+6. Tag: `git tag -a v0.x.x -m "..."`
+7. Push: `git push && git push --tags`
+8. Publish: `npm publish --access public`
+9. Release: `gh release create v0.x.x ...`
+
+## Important Files Reference
+
+### Configuration
+- `.env.example` - Configuration template
+- `.env.commercial` - Azure Commercial template
+- `.env.gcc-high` - Azure GCC-High template
+- `.env.dod` - Azure DoD template
+
+### Core Implementation
+- `packages/latch/src/config.ts` - Configuration parsing, endpoint generation, issuer validation
+- `packages/latch/src/crypto/seal.ts` - Cookie encryption with key caching
+- `packages/latch/src/oidc/validation.ts` - ID token verification with JWKS
+- `packages/latch/src/oidc/token.ts` - Token exchange and refresh
+- `packages/latch/src/react/LatchProvider.tsx` - React context with auto-refresh
+
+### Key Exports
+- `getLatchConfig()` - Parse and validate configuration
+- `getServerSession(secret)` - Get session in Server Components/Actions
+- `requireAuth(secret)` - Require authentication (throws if not authenticated)
+- `useLatch()` - React hook for authentication state
+- `seal(data, secret)` - Encrypt data for cookies
+- `unseal(sealed, secret)` - Decrypt data from cookies
+- `exchangeCodeForTokens()` - Exchange authorization code for tokens
+- `refreshAccessToken()` - Refresh access token using refresh token
+- `verifyIdToken()` - Verify ID token signature and claims
+
+## Environment Variables
+
+### Required
+- `LATCH_CLIENT_ID` - Azure AD Application (client) ID
+- `LATCH_TENANT_ID` - Azure AD Directory (tenant) ID
+- `LATCH_CLOUD` - Cloud environment (commercial | gcc-high | dod)
+- `LATCH_SCOPES` - OAuth scopes (space-separated)
+- `LATCH_REDIRECT_URI` - OAuth callback URL
+- `LATCH_COOKIE_SECRET` - Cookie encryption secret (32+ bytes, generate with CLI)
+
+### Optional
+- `LATCH_CLIENT_SECRET` - Client secret (for confidential clients)
+- `LATCH_DEBUG` - Enable debug logging (never logs tokens)
+- `LATCH_CLOCK_SKEW_TOLERANCE` - Clock skew tolerance in seconds (default: 60)
+- `LATCH_JWKS_CACHE_TTL` - JWKS cache TTL in seconds (default: 3600)
+
+## Architecture Decisions
+
+### Why HttpOnly Cookies?
+- XSS protection (JS cannot read tokens)
+- No localStorage vulnerabilities
+- Automatic in-flight for fetch requests
+- Supports SSR/RSC seamlessly
+
+### Why PKCE Always?
+- Even with client_secret, PKCE prevents code interception
+- Required for public clients (SPAs)
+- Recommended by OAuth 2.1 spec
+- Defense-in-depth security
+
+### Why Stateless Sessions?
+- No database required
+- Scales horizontally without session store
+- No sticky sessions needed
+- Simpler deployment
+
+### Why Azure AD Only?
+- Focus on quality over quantity
+- Enterprise/government niche
+- Native government cloud support
+- Can extend to other OIDC providers later
+
+### Why Monorepo?
+- Share types between packages
+- Consistent versioning
+- Easier testing across packages
+- Example apps use local packages
+
+## Production Patterns
+
+### Wrapping Latch Helpers
+Production apps should wrap Latch's primitives with app-specific logic:
+
+```typescript
+// lib/auth.ts - Your application wrapper
+import { getServerSession } from '@lance0/latch';
+import { cache } from 'react';
+
+export const getCurrentUser = cache(async () => {
+  const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+  if (!session.isAuthenticated) return null;
+  
+  // Your app logic: DB sync, roles, etc.
+  const user = await db.user.upsert({
+    where: { azureId: session.user.sub },
+    create: { /* ... */ },
+    update: { /* ... */ },
+  });
+  
+  return user;
+});
+
+export async function requireAuth() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Authentication required');
+  return user;
+}
+```
+
+See docs/SERVER_ACTIONS.md for complete production patterns.
+
+## Links
+
+- GitHub: https://github.com/lance0/latch
+- npm: https://www.npmjs.com/package/@lance0/latch
+- CLI: https://www.npmjs.com/package/@lance0/latch-cli
+- Issues: https://github.com/lance0/latch/issues
+- Releases: https://github.com/lance0/latch/releases
+
+## Support
+
+For questions, issues, or contributions:
+1. Check TROUBLESHOOTING.md for common issues
+2. Search existing GitHub issues
+3. Open a new issue with reproduction steps
+4. See SECURITY.md for security vulnerabilities
+
+---
+
+Last updated: 2025-11-12 (v0.4.2)
