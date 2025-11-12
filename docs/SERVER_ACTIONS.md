@@ -7,6 +7,7 @@ Server Actions are asynchronous functions that run on the server and can be call
 - [Quick Start](#quick-start)
 - [Authentication Helpers](#authentication-helpers)
 - [Patterns](#patterns)
+- [Production Patterns](#production-patterns)
 - [Error Handling](#error-handling)
 - [When to Use Server Actions vs API Routes](#when-to-use-server-actions-vs-api-routes)
 - [Security Best Practices](#security-best-practices)
@@ -278,6 +279,208 @@ export default function ProfileForm() {
     </form>
   );
 }
+```
+
+---
+
+## Production Patterns
+
+**⚠️ Important:** Latch's helpers (`getServerSession`, `requireAuth`) are primitives that only read cookies. Production apps should wrap them with app-specific logic.
+
+### Why Wrap?
+
+Latch provides the authentication primitive, but your app needs:
+- Database user sync
+- Role/permission loading
+- Caching
+- Custom error handling
+- Logging/analytics
+
+### Recommended Pattern
+
+**Step 1: Create your auth wrapper**
+
+```typescript
+// lib/auth.ts
+'use server';
+
+import { getServerSession, requireAuth as latchRequireAuth } from '@lance0/latch';
+import { cache } from 'react';
+
+export interface AppUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'user';
+  // Your app-specific fields
+}
+
+/**
+ * Get current user with DB sync and role loading.
+ * Cached per-request to avoid redundant DB queries.
+ */
+export const getCurrentUser = cache(async (): Promise<AppUser | null> => {
+  const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+  
+  if (!session.isAuthenticated || !session.user) {
+    return null;
+  }
+  
+  // Sync user to database
+  const dbUser = await db.user.upsert({
+    where: { azureId: session.user.sub },
+    create: {
+      azureId: session.user.sub,
+      email: session.user.email!,
+      name: session.user.name!,
+    },
+    update: {
+      email: session.user.email!,
+      name: session.user.name!,
+      lastLogin: new Date(),
+    },
+    include: { role: true },
+  });
+  
+  return {
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name,
+    role: dbUser.role.name,
+  };
+});
+
+/**
+ * Require authentication with DB sync.
+ * Throws if not authenticated.
+ */
+export async function requireAuth(): Promise<AppUser> {
+  const user = await getCurrentUser();
+  
+  if (!user) {
+    throw new Error('Authentication required');
+  }
+  
+  return user;
+}
+
+/**
+ * Require specific role.
+ */
+export async function requireRole(role: 'admin' | 'user'): Promise<AppUser> {
+  const user = await requireAuth();
+  
+  if (user.role !== role && user.role !== 'admin') {
+    throw new Error(`Requires ${role} role`);
+  }
+  
+  return user;
+}
+```
+
+**Step 2: Use your wrappers everywhere**
+
+```typescript
+// app/actions/profile.ts
+'use server';
+
+import { requireAuth } from '@/lib/auth';
+
+export async function updateProfile(name: string) {
+  const user = await requireAuth(); // ← Your wrapper
+  
+  await db.user.update({
+    where: { id: user.id },
+    data: { name },
+  });
+  
+  return { success: true };
+}
+```
+
+**Step 3: Admin-only actions**
+
+```typescript
+// app/actions/admin.ts
+'use server';
+
+import { requireRole } from '@/lib/auth';
+
+export async function deleteUser(userId: string) {
+  await requireRole('admin'); // ← Checks role
+  
+  await db.user.delete({ where: { id: userId } });
+  return { success: true };
+}
+```
+
+### Benefits of This Pattern
+
+✅ **Single source of truth** - All auth logic in one place  
+✅ **Type safety** - Your `AppUser` type with app-specific fields  
+✅ **Performance** - `cache()` prevents redundant DB queries per request  
+✅ **Flexibility** - Easy to add logging, analytics, feature flags  
+✅ **Testing** - Mock your wrapper, not Latch primitives  
+
+### Don't Do This
+
+```typescript
+// ❌ BAD: Using Latch primitives directly everywhere
+'use server';
+import { requireAuth } from '@lance0/latch';
+
+export async function updateProfile(name: string) {
+  const user = await requireAuth(process.env.LATCH_COOKIE_SECRET!);
+  
+  // Now you need to sync to DB manually
+  const dbUser = await db.user.findUnique({
+    where: { azureId: user.sub }
+  });
+  
+  // And you're repeating this logic in every action...
+}
+```
+
+### Advanced: Dependency Injection
+
+For even better testability:
+
+```typescript
+// lib/auth.ts
+import { getServerSession } from '@lance0/latch';
+
+export function createAuth(deps = { db, logger }) {
+  return {
+    async getCurrentUser() {
+      const session = await getServerSession(secret);
+      if (!session.isAuthenticated) return null;
+      
+      const user = await deps.db.user.upsert(/* ... */);
+      deps.logger.info('User logged in', { userId: user.id });
+      
+      return user;
+    },
+    
+    async requireAuth() {
+      const user = await this.getCurrentUser();
+      if (!user) throw new Error('Auth required');
+      return user;
+    },
+  };
+}
+
+// app/actions/profile.ts
+const auth = createAuth(); // Use default deps
+export async function updateProfile(name: string) {
+  const user = await auth.requireAuth();
+  // ...
+}
+
+// tests/profile.test.ts
+const mockAuth = createAuth({ 
+  db: mockDb, 
+  logger: mockLogger 
+});
 ```
 
 ---
