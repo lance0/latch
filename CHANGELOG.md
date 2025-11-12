@@ -5,6 +5,60 @@ All notable changes to Latch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-11-12
+
+### Added
+- **Token Confusion Attack Prevention**
+  - `validateIssuer()` helper for strict tenant/cloud validation
+  - Automatic detection of commercial vs government cloud mismatches
+  - Prevents tokens from wrong tenant being accepted
+  - Clear error messages for misconfigurations
+- **Configurable Security Settings**
+  - `LATCH_CLOCK_SKEW_TOLERANCE` for token validation (default: 60s)
+  - `LATCH_JWKS_CACHE_TTL` for JWKS caching (default: 3600s)
+  - Enhanced `verifyIdToken()` with optional tenant/cloud validation
+- **Enhanced CLI (@lance0/latch-cli@0.4.1)**
+  - `latch scaffold` - Copy API routes and Server Actions from examples
+  - `latch validate` - Validate .env.local for common mistakes
+  - `latch doctor` - Run diagnostics on Latch setup
+  - Updated init wizard with security options
+
+### Security
+- Added 19 new security tests for issuer validation
+- Multi-tenant scenario coverage
+- Token confusion attack scenarios
+
+### Documentation
+- Updated SECURITY.md with Token Confusion Attack Prevention section
+- Attack scenarios and protections documented
+
+## [0.4.0] - 2025-11-12
+
+### Added
+- **Server Actions Support**
+  - `getServerSession()` - Session access in Server Components/Actions
+  - `requireAuth()` - Authentication guard with automatic error throw
+  - Server Actions examples (profile, updateSettings)
+  - Interactive demo page with useTransition patterns
+  - Comprehensive docs/SERVER_ACTIONS.md guide
+- **Example App Presets**
+  - `apps/example-commercial` - Azure Commercial Cloud preset
+  - `apps/example-gcc-high` - Azure Government (GCC-High) preset
+  - Cloud-specific .env.example files with detailed comments
+  - Dedicated README for each preset with IL4 compliance notes
+  - Comprehensive apps/README.md comparing all examples
+- **Migration Guides**
+  - docs/MIGRATION_FROM_NEXTAUTH.md - Complete NextAuth.js migration guide
+  - docs/MIGRATION_FROM_MSAL.md - MSAL Browser/React migration guide
+  - Side-by-side code comparisons
+  - Feature mapping tables
+  - Quick comparison table in README
+
+### Documentation
+- Added "Migrating to Latch" section to README
+- Common pitfalls section for multi-cloud scenarios
+- Features demonstrated list in apps documentation
+
 ## [0.3.0] - 2025-10-23
 
 ### Added
