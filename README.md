@@ -11,12 +11,14 @@ This repository uses pnpm workspaces and Turborepo:
 ```
 latch/
 ├── packages/
-│   ├── latch/          # @lance0/latch - Core authentication library
-│   └── latch-cli/      # @lance0/latch-cli - CLI tools (init wizard, secret generator)
+│   ├── latch/               # @lance0/latch - Core authentication library
+│   └── latch-cli/           # @lance0/latch-cli - CLI tools
 ├── apps/
-│   └── example-app/    # Example Next.js application
-├── docs/               # Documentation
-└── ROADMAP.md         # Development roadmap
+│   ├── example-app/         # Generic example (configurable)
+│   ├── example-commercial/  # Azure Commercial preset
+│   └── example-gcc-high/    # Azure Government (GCC-High) preset
+├── docs/                    # Documentation
+└── ROADMAP.md              # Development roadmap
 ```
 
 ## Features
@@ -171,7 +173,17 @@ export default function Home() {
 }
 ```
 
-### 7. Protect routes
+### 7. Explore example applications
+
+Check out the pre-configured examples for your cloud:
+
+- **[example-commercial](./apps/example-commercial/)** - Azure Commercial Cloud
+- **[example-gcc-high](./apps/example-gcc-high/)** - Azure Government (GCC-High)
+- **[example-app](./apps/example-app/)** - Generic (configurable)
+
+See [apps/README.md](./apps/README.md) for detailed comparison.
+
+### 8. Protect routes
 
 **Option A: Component-level protection**
 

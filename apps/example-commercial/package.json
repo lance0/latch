@@ -1,0 +1,28 @@
+{
+  "name": "@latch/example-commercial",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "echo 'Skipped: ESLint 9 + Next.js 16 flat config migration pending'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lance0/latch": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.15.0",
+    "eslint-config-next": "^16.0.0",
+    "next": "^16.0.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2"
+  }
+}
