@@ -25,8 +25,11 @@ latch/
 - ✅ **HttpOnly encrypted cookies** (AES-GCM)
 - ✅ **Azure Government cloud support** (GCC-High, DoD)
 - ✅ **Next.js 15 App Router** native
+- ✅ **Server Actions** support with `getServerSession()` and `requireAuth()`
+- ✅ **Token confusion attack prevention** - Strict issuer/tenant validation
 - ✅ **TypeScript-first** with full IntelliSense
 - ✅ **Audit-friendly** and transparent
+- ✅ **Configurable security** - Clock skew, JWKS cache TTL
 - ✅ **Two modes:** Secure Proxy (default) or Direct Token
 
 ## Quick Start (Using the Package)
@@ -79,6 +82,10 @@ LATCH_CLIENT_ID=your-client-id
 LATCH_TENANT_ID=your-tenant-id
 LATCH_CLOUD=gcc-high
 LATCH_SCOPES=openid profile User.Read
+
+# Optional security settings
+LATCH_CLOCK_SKEW_TOLERANCE=60    # seconds, default: 60
+LATCH_JWKS_CACHE_TTL=3600         # seconds, default: 3600
 LATCH_REDIRECT_URI=http://localhost:3000/api/latch/callback
 LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
 ```

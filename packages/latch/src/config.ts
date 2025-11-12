@@ -16,6 +16,15 @@ export function getLatchConfig(): LatchConfig {
   const cookieSecret = process.env.LATCH_COOKIE_SECRET;
   const debug = process.env.LATCH_DEBUG === 'true';
 
+  // Parse security settings (optional)
+  const clockSkewTolerance = process.env.LATCH_CLOCK_SKEW_TOLERANCE
+    ? parseInt(process.env.LATCH_CLOCK_SKEW_TOLERANCE, 10)
+    : 60; // Default: 60 seconds
+
+  const jwksCacheTTL = process.env.LATCH_JWKS_CACHE_TTL
+    ? parseInt(process.env.LATCH_JWKS_CACHE_TTL, 10)
+    : 3600; // Default: 1 hour
+
   // Parse client certificate (optional - alternative to client secret)
   let clientCertificate: ClientCertificate | undefined;
   const certPrivateKey = process.env.LATCH_CERTIFICATE_PRIVATE_KEY;
@@ -102,6 +111,8 @@ export function getLatchConfig(): LatchConfig {
     debug,
     allowedAudiences,
     oboCache,
+    clockSkewTolerance,
+    jwksCacheTTL,
   };
 
   // Validate scopes match cloud environment
@@ -252,6 +263,77 @@ export function clearLatchCookies(response: NextResponse): void {
   response.cookies.delete(COOKIE_NAMES.REFRESH_TOKEN);
   response.cookies.delete(COOKIE_NAMES.ID_TOKEN);
   response.cookies.delete(COOKIE_NAMES.PKCE_DATA);
+}
+
+/**
+ * Validate token issuer matches expected cloud and tenant
+ * 
+ * Prevents token confusion attacks where tokens from wrong tenant/cloud are accepted.
+ * 
+ * **Security:** This is a critical security function. Always validate issuer before
+ * trusting token claims.
+ * 
+ * @param issuer - Issuer from token (iss claim)
+ * @param expectedTenantId - Expected tenant ID
+ * @param expectedCloud - Expected cloud environment
+ * @throws {LatchError} if issuer doesn't match expectations
+ * 
+ * @example
+ * ```typescript
+ * const claims = jwt.decode(token);
+ * validateIssuer(claims.iss, config.tenantId, config.cloud);
+ * ```
+ */
+export function validateIssuer(
+  issuer: string | undefined,
+  expectedTenantId: string,
+  expectedCloud: LatchCloud
+): void {
+  if (!issuer) {
+    throw createLatchError(
+      'LATCH_ID_TOKEN_INVALID',
+      '[Latch] Token missing issuer (iss) claim.\n\n' +
+      'This token is invalid or malformed.'
+    );
+  }
+
+  // Expected issuer formats by cloud
+  const expectedIssuers: string[] = [];
+  
+  if (expectedCloud === 'commercial') {
+    expectedIssuers.push(`https://login.microsoftonline.com/${expectedTenantId}/v2.0`);
+    expectedIssuers.push(`https://sts.windows.net/${expectedTenantId}/`);
+  } else if (expectedCloud === 'gcc-high' || expectedCloud === 'dod') {
+    expectedIssuers.push(`https://login.microsoftonline.us/${expectedTenantId}/v2.0`);
+    expectedIssuers.push(`https://sts.windows.net/${expectedTenantId}/`); // v1 endpoint
+  }
+
+  // Check if issuer matches any expected format
+  const issuerMatch = expectedIssuers.some(expected => issuer === expected);
+
+  if (!issuerMatch) {
+    // Try to detect the issue
+    let hint = '';
+    
+    if (issuer.includes('login.microsoftonline.com') && expectedCloud !== 'commercial') {
+      hint = `\n\nThe token is from Azure Commercial (.com) but LATCH_CLOUD=${expectedCloud}.\n` +
+             'Fix: Set LATCH_CLOUD=commercial in your .env.local';
+    } else if (issuer.includes('login.microsoftonline.us') && expectedCloud === 'commercial') {
+      hint = `\n\nThe token is from Azure Government (.us) but LATCH_CLOUD=commercial.\n` +
+             'Fix: Set LATCH_CLOUD=gcc-high or LATCH_CLOUD=dod in your .env.local';
+    } else if (!issuer.includes(expectedTenantId)) {
+      hint = `\n\nThe token is from a different tenant.\n` +
+             `Expected tenant: ${expectedTenantId}\n` +
+             `Fix: Verify LATCH_TENANT_ID matches your Azure AD tenant`;
+    }
+
+    throw createLatchError(
+      'LATCH_CLOUD_MISMATCH',
+      `[Latch] Token issuer mismatch (potential token confusion attack).\n\n` +
+      `Received issuer: ${issuer}\n` +
+      `Expected one of:\n${expectedIssuers.map(e => `  • ${e}`).join('\n')}${hint}`
+    );
+  }
 }
 
 /**

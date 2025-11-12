@@ -1,5 +1,6 @@
-import { LatchError, LatchUser } from '../types';
+import { LatchError, LatchUser, LatchCloud } from '../types';
 import * as jose from 'jose';
+import { validateIssuer } from '../config';
 
 /**
  * Validate state parameter matches
@@ -106,7 +107,12 @@ export async function verifyIdToken(
   idToken: string,
   jwksUri: string,
   clientId: string,
-  nonce: string
+  nonce: string,
+  options?: {
+    tenantId?: string;
+    cloud?: LatchCloud;
+    clockTolerance?: number;
+  }
 ): Promise<LatchUser> {
   // Runtime validation
   if (!idToken || typeof idToken !== 'string') {
@@ -138,11 +144,16 @@ export async function verifyIdToken(
     // Fetch JWKS
     const JWKS = jose.createRemoteJWKSet(new URL(jwksUri));
 
-    // Verify token
+    // Verify token with configurable clock tolerance
     const { payload } = await jose.jwtVerify(idToken, JWKS, {
       audience: clientId,
-      clockTolerance: 60, // Allow 60 seconds clock skew
+      clockTolerance: options?.clockTolerance ?? 60, // Default: 60 seconds clock skew
     });
+
+    // Validate issuer if tenant and cloud provided (prevents token confusion attacks)
+    if (options?.tenantId && options?.cloud) {
+      validateIssuer(payload.iss, options.tenantId, options.cloud);
+    }
 
     // Validate nonce
     if (payload.nonce !== nonce) {

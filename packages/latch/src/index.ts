@@ -24,6 +24,7 @@ export {
   getLatchConfig,
   getAzureEndpoints,
   validateScopes,
+  validateIssuer,
   buildLogoutUrl,
   clearLatchCookies,
   COOKIE_NAMES,

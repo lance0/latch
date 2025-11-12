@@ -78,6 +78,12 @@ export interface LatchConfig {
 
   /** Allowed audiences for incoming bearer tokens (your API's identifiers) */
   allowedAudiences?: string[];
+
+  /** Clock skew tolerance in seconds (default: 60) */
+  clockSkewTolerance?: number;
+
+  /** JWKS cache TTL in seconds (default: 3600) */
+  jwksCacheTTL?: number;
 }
 
 /**

@@ -19,6 +19,7 @@ Latch is designed to protect against:
 - **Scope escalation** - Cloud-aware scope validation
 - **Cookie tampering** - AES-GCM authenticated encryption
 - **Token exposure** - Refresh tokens never sent to client; access tokens only in Direct Token mode
+- **Token confusion attacks** - Strict issuer validation, tenant/cloud verification (v0.4.1+)
 
 ### Security Features
 
@@ -45,9 +46,52 @@ Latch is designed to protect against:
    - Audience claim validation
    - Nonce validation
    - Expiration check
-   - Clock skew tolerance: 60 seconds
+   - **Issuer validation** - Prevents token confusion attacks (v0.4.1+)
+   - **Tenant validation** - Ensures token is from expected tenant (v0.4.1+)
+   - **Cloud validation** - Prevents commercial/government cloud mismatch (v0.4.1+)
+   - Clock skew tolerance: configurable (default: 60 seconds)
 
-5. **Return URL Validation**
+5. **Token Confusion Attack Prevention (v0.4.1+)**
+   
+   Token confusion attacks occur when an application accepts tokens from unintended issuers or tenants.
+   
+   **Attack Scenarios:**
+   - Multi-tenant application accepts token from wrong tenant
+   - Application misconfigured for wrong cloud (commercial vs government)
+   - Attacker obtains valid token from different tenant and replays it
+   
+   **Latch Protections:**
+   - Strict issuer validation against expected tenant and cloud
+   - Automatic detection of cloud mismatches (`.com` vs `.us`)
+   - Clear error messages indicating the specific mismatch
+   - Configurable via `validateIssuer()` helper function
+   
+   **Example:**
+   ```typescript
+   // Automatic validation in verifyIdToken()
+   const user = await verifyIdToken(
+     tokens.id_token,
+     endpoints.jwksUri,
+     config.clientId,
+     pkceData.nonce,
+     {
+       tenantId: config.tenantId,  // Validates token from correct tenant
+       cloud: config.cloud,         // Validates token from correct cloud
+     }
+   );
+   
+   // Manual validation for custom scenarios
+   import { validateIssuer } from '@lance0/latch';
+   validateIssuer(payload.iss, expectedTenantId, expectedCloud);
+   ```
+   
+   **Best Practices:**
+   - Always pass `tenantId` and `cloud` options to `verifyIdToken()`
+   - Use `validateIssuer()` when manually validating tokens
+   - Never trust token claims without verifying issuer first
+   - Log and alert on issuer validation failures (potential attack)
+
+6. **Return URL Validation**
    - Same-origin enforcement
    - No cross-origin redirects
    - Protocol validation (blocks javascript:, data:, etc.)

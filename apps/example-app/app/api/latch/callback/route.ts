@@ -69,7 +69,12 @@ export async function GET(request: NextRequest) {
         tokens.id_token,
         endpoints.jwksUri,
         config.clientId,
-        pkceData.nonce
+        pkceData.nonce,
+        {
+          tenantId: config.tenantId,
+          cloud: config.cloud,
+          clockTolerance: config.clockSkewTolerance,
+        }
       );
     }
 
