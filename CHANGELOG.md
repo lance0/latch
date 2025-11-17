@@ -5,6 +5,35 @@ All notable changes to Latch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2025-11-17
+
+### Changed
+- **Documentation**: Moved recommended wrapping pattern to Quick Start section in README
+  - Now appears as step 6 (before using auth in components)
+  - Emphasizes centralizing auth logic with app-specific helpers
+  - Shows complete lib/auth.ts example with database sync
+  - Includes CLI command to generate wrapper
+  - Added step 8 showing usage in Server Actions and API routes
+
+### Notes
+- No code changes - documentation-only release
+- Makes the recommended production pattern more discoverable
+- Helps users avoid common mistakes (using Latch helpers directly everywhere)
+
+## [0.4.4] - 2025-11-17
+
+### Added
+- **CLI**: Enhanced `latch scaffold` command with new capabilities
+  - `latch scaffold --type proxy` - Generate Next.js 16 compatible proxy.ts
+  - `latch scaffold --type wrapper` - Generate lib/auth.ts auth helpers
+  - `latch scaffold --type all` - Complete setup (proxy + wrapper + routes)
+  - Interactive menu for selecting what to scaffold
+  - Inline proxy.ts generation as fallback when reference file not found
+
+### Changed
+- **CLI**: Improved scaffold command description and help text
+- **CLI**: Version updated to 0.4.4
+
 ## [0.4.3] - 2025-11-17
 
 ### Added

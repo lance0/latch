@@ -150,7 +150,68 @@ export default function RootLayout({ children }) {
 }
 ```
 
-### 6. Use authentication in your components
+### 6. Create app-specific auth helpers (Recommended Pattern)
+
+**Don't use Latch helpers directly in every route.** Instead, create a wrapper with your application logic:
+
+```typescript
+// lib/auth.ts - Your application's auth helpers
+import { getServerSession } from '@lance0/latch';
+import { cache } from 'react';
+
+/**
+ * Get current user with app-specific logic
+ * Cached per-request to avoid duplicate operations
+ */
+export const getCurrentUser = cache(async () => {
+  const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+
+  if (!session.isAuthenticated || !session.user) {
+    return null;
+  }
+
+  // Your app logic: database sync, roles, permissions, etc.
+  const user = await db.user.upsert({
+    where: { azureId: session.user.sub },
+    create: {
+      azureId: session.user.sub,
+      email: session.user.email,
+      name: session.user.name,
+    },
+    update: {
+      email: session.user.email,
+      name: session.user.name,
+    },
+  });
+
+  return user;
+});
+
+/**
+ * Require authentication - throws if not authenticated
+ */
+export async function requireAuth() {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Authentication required');
+  }
+  return user;
+}
+```
+
+**Why wrap Latch helpers?**
+- ✅ Centralized authentication logic
+- ✅ Database user sync in one place (JIT provisioning)
+- ✅ Request-level caching with React `cache()`
+- ✅ App-specific fields (roles, permissions, etc.)
+- ✅ Easier to test and maintain
+
+**Generate with CLI:**
+```bash
+npx @lance0/latch-cli scaffold --type wrapper
+```
+
+### 7. Use authentication in your components
 
 ```tsx
 'use client';
@@ -173,7 +234,30 @@ export default function Home() {
 }
 ```
 
-### 7. Explore example applications
+### 8. Use your wrapper in Server Actions and API routes
+
+```typescript
+// In API routes
+import { getCurrentUser } from '@/lib/auth';
+
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // ... your logic with database user object
+}
+
+// In Server Actions
+import { requireAuth } from '@/lib/auth';
+
+export async function updateProfile(data: FormData) {
+  const user = await requireAuth(); // Throws if not authenticated
+  // ... your logic
+}
+```
+
+### 9. Explore example applications
 
 Check out the pre-configured examples for your cloud:
 
@@ -183,7 +267,7 @@ Check out the pre-configured examples for your cloud:
 
 See [apps/README.md](./apps/README.md) for detailed comparison.
 
-### 8. Protect routes
+### 10. Protect routes
 
 **Option A: Component-level protection**
 
