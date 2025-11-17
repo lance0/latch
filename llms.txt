@@ -2,7 +2,7 @@
 
 > Security-first OIDC authentication for Next.js 15+ with native Azure Government cloud support
 
-Version: 0.4.2
+Version: 0.4.5
 License: Apache-2.0
 Repository: https://github.com/lance0/latch
 npm: @lance0/latch
@@ -67,7 +67,7 @@ src/
 ├── types.ts                    # TypeScript type definitions
 ├── config.ts                   # Configuration parsing and validation
 ├── errors.ts                   # Error types and messages
-├── helpers.ts                  # Server-side helpers (getServerSession, requireAuth)
+├── helpers.ts                  # Server-side helpers (getServerSession, requireAuth, requireServerSession, isLatchSession, checkLatchHealth)
 ├── crypto/
 │   ├── seal.ts                 # AES-GCM encryption with PBKDF2 key caching
 │   ├── pkce.ts                 # PKCE code verifier/challenge generation
@@ -96,7 +96,7 @@ src/
 └── commands/
     ├── generate-secret.ts      # Generate LATCH_COOKIE_SECRET
     ├── init.ts                 # Interactive setup wizard
-    ├── scaffold.ts             # Copy API routes from examples
+    ├── scaffold.ts             # Scaffold API routes, proxy.ts, or auth wrapper
     ├── validate.ts             # Validate .env.local configuration
     └── doctor.ts               # Diagnose setup issues
 ```
@@ -155,6 +155,31 @@ PBKDF2-derived encryption keys are cached in memory:
 - 10-20x performance improvement
 - Cache is per-process, supports secret rotation
 
+### DX Improvements (v0.4.3+)
+New TypeScript-friendly helpers reduce boilerplate:
+- `requireServerSession(secret)` - Returns session with guaranteed user (no `!` assertions needed)
+- `isLatchSession(session)` - Type guard for proper TypeScript narrowing
+- `checkLatchHealth()` - Configuration validator for health check endpoints
+
+Reference implementations:
+- `examples/nextjs16/proxy.ts` - Next.js 16 compatible proxy (no runtime export)
+- Proper session validation patterns (check `session.sub` not `session.idToken`)
+
+### CLI Enhancements (v0.4.4+)
+Enhanced scaffold command with multiple options:
+- `latch scaffold --type proxy` - Generate Next.js 16 compatible proxy.ts
+- `latch scaffold --type wrapper` - Generate lib/auth.ts with recommended pattern
+- `latch scaffold --type routes` - Copy API routes from examples
+- `latch scaffold --type all` - Complete setup
+- Interactive menu for easy selection
+
+### Documentation Improvements (v0.4.5+)
+Recommended production patterns now in Quick Start:
+- Wrapping Latch helpers with app-specific logic
+- Database sync pattern (JIT user provisioning)
+- Request-level caching with React `cache()`
+- Centralized authentication logic
+
 ### Security Features
 - Token confusion attack prevention (validates issuer matches tenant/cloud)
 - PKCE S256 (prevents authorization code interception)
@@ -185,7 +210,7 @@ pnpm test:watch                 # Watch mode
 pnpm typecheck                  # TypeScript check
 ```
 
-Current: 164 tests passing (66 security-focused)
+Current: 182 tests passing (66 security-focused)
 
 ## Common Tasks
 
@@ -193,7 +218,7 @@ Current: 164 tests passing (66 security-focused)
 1. Install: `npm install @lance0/latch`
 2. Configure: Create `.env.local` with Azure AD credentials
 3. Setup CLI: `npx @lance0/latch-cli init` (interactive wizard)
-4. Scaffold: `npx @lance0/latch-cli scaffold` (copies API routes)
+4. Scaffold: `npx @lance0/latch-cli scaffold` (interactive - routes, proxy.ts, or auth wrapper)
 5. Validate: `npx @lance0/latch-cli validate` (checks config)
 6. Wrap app: Add `<LatchProvider>` to root layout
 7. Use hooks: `useLatch()` for authentication state
@@ -341,4 +366,4 @@ For questions, issues, or contributions:
 
 ---
 
-Last updated: 2025-11-12 (v0.4.2)
+Last updated: 2025-11-17 (v0.4.5)
