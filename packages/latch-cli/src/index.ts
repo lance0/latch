@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name('latch')
   .description('CLI tools for Latch authentication library')
-  .version('0.4.1');
+  .version('0.4.4');
 
 program
   .command('generate-secret')
@@ -25,7 +25,8 @@ program
 
 program
   .command('scaffold')
-  .description('Copy API routes and Server Actions from example apps')
+  .description('Scaffold Latch files: API routes, proxy.ts, or auth wrapper')
+  .option('--type <type>', 'Type to scaffold: routes, proxy, wrapper, or all')
   .option('--example <type>', 'Example to scaffold from: base, commercial, gcc-high')
   .action(scaffold);
 
