@@ -329,3 +329,135 @@ export async function requireAuth(cookieSecret: string): Promise<LatchUser> {
   
   return session.user;
 }
+
+/**
+ * Get authenticated session or throw error
+ * 
+ * Use in API routes and Server Components when authentication is required.
+ * Returns a session with guaranteed user object (TypeScript knows user is not null).
+ * 
+ * @param cookieSecret - The LATCH_COOKIE_SECRET value
+ * @returns Authenticated session with guaranteed user object
+ * @throws {LatchError} LATCH_UNAUTHORIZED if not authenticated
+ * 
+ * @example
+ * ```typescript
+ * // In API route
+ * export async function GET(request: NextRequest) {
+ *   try {
+ *     const session = await requireServerSession(process.env.LATCH_COOKIE_SECRET!);
+ *     // session.user is guaranteed to exist - no need for ! assertion
+ *     return Response.json({ userId: session.user.sub });
+ *   } catch (error) {
+ *     return Response.json({ error: 'Unauthorized' }, { status: 401 });
+ *   }
+ * }
+ * ```
+ */
+export async function requireServerSession(
+  cookieSecret: string
+): Promise<LatchSession & { isAuthenticated: true; user: LatchUser }> {
+  const session = await getServerSession(cookieSecret);
+
+  if (!session.isAuthenticated || !session.user) {
+    throw new LatchError(
+      'LATCH_UNAUTHORIZED',
+      'Valid session required. User must be signed in to access this resource.'
+    );
+  }
+
+  return session as LatchSession & { isAuthenticated: true; user: LatchUser };
+}
+
+/**
+ * Type guard to check if session is authenticated
+ * 
+ * Narrows TypeScript type to guarantee user exists.
+ * Useful for conditional logic where you check session validity.
+ * 
+ * @param session - Session object to check
+ * @returns True if session is authenticated with valid user
+ * 
+ * @example
+ * ```typescript
+ * const session = await getServerSession(secret);
+ * 
+ * if (isLatchSession(session)) {
+ *   // TypeScript knows session.user is LatchUser (not null)
+ *   console.log(session.user.sub);
+ *   console.log(session.user.email);
+ * }
+ * ```
+ */
+export function isLatchSession(
+  session: LatchSession | null
+): session is LatchSession & { isAuthenticated: true; user: LatchUser } {
+  return session !== null && session.isAuthenticated === true && session.user !== null;
+}
+
+/**
+ * Check if Latch is properly configured
+ * 
+ * Useful for /api/health endpoints and startup checks.
+ * Validates that all required environment variables are set.
+ * 
+ * @returns Object with configuration status and any errors/warnings
+ * 
+ * @example
+ * ```typescript
+ * // In /api/health route
+ * export async function GET() {
+ *   const health = checkLatchHealth();
+ *   
+ *   if (!health.configured) {
+ *     return Response.json({
+ *       status: 'unhealthy',
+ *       latch: health
+ *     }, { status: 500 });
+ *   }
+ *   
+ *   return Response.json({ status: 'healthy' });
+ * }
+ * ```
+ */
+export function checkLatchHealth(): {
+  configured: boolean;
+  errors: string[];
+  warnings: string[];
+} {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Check required variables
+  if (!process.env.LATCH_CLIENT_ID) {
+    errors.push('LATCH_CLIENT_ID missing');
+  }
+  if (!process.env.LATCH_TENANT_ID) {
+    errors.push('LATCH_TENANT_ID missing');
+  }
+  if (!process.env.LATCH_COOKIE_SECRET) {
+    errors.push('LATCH_COOKIE_SECRET missing');
+  } else if (process.env.LATCH_COOKIE_SECRET.length < 32) {
+    warnings.push('LATCH_COOKIE_SECRET should be at least 32 characters');
+  }
+  if (!process.env.LATCH_CLOUD) {
+    errors.push('LATCH_CLOUD missing');
+  }
+  if (!process.env.LATCH_SCOPES) {
+    errors.push('LATCH_SCOPES missing');
+  }
+  if (!process.env.LATCH_REDIRECT_URI) {
+    errors.push('LATCH_REDIRECT_URI missing');
+  }
+
+  // Optional but recommended
+  if (!process.env.LATCH_CLIENT_SECRET) {
+    warnings.push('LATCH_CLIENT_SECRET not set (using public client mode)');
+  }
+
+  return {
+    configured: errors.length === 0,
+    errors,
+    warnings,
+  };
+}

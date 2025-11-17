@@ -5,6 +5,33 @@ All notable changes to Latch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2025-11-17
+
+### Added
+- **New Helpers for Better DX**:
+  - `requireServerSession()` - Get authenticated session or throw (TypeScript-friendly, no `!` assertions needed)
+  - `isLatchSession()` - Type guard for session validation (proper TypeScript narrowing)
+  - `checkLatchHealth()` - Validate Latch configuration (useful for `/api/health` endpoints)
+- **Reference Implementation**: `examples/nextjs16/proxy.ts` - Complete Next.js 16 proxy with proper session validation
+- **Comprehensive Documentation**: Session structure, cookie names, and usage patterns in API_REFERENCE.md
+
+### Fixed
+- **Critical**: Removed incorrect `export const runtime = 'nodejs'` from proxy.ts examples (causes build errors in Next.js 16)
+- **Critical**: Fixed session validation - check `session.sub` not `session.idToken` (which doesn't exist)
+- **Documentation**: Clarified LatchSession structure - properties are on `session.user`, not `session` directly
+
+### Changed
+- **Documentation**: Enhanced API_REFERENCE.md with:
+  - Clear LatchSession and LatchUser structure
+  - ✅ Correct vs ❌ Wrong usage examples
+  - Cookie name constants documentation
+  - Session validation patterns for proxy.ts
+
+### Notes
+- All changes are **non-breaking** - existing code continues to work
+- New helpers are **optional** convenience functions
+- Based on real production feedback (Scout app integration)
+
 ## [0.4.2] - 2025-11-12
 
 ### Added

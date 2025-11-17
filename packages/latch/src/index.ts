@@ -42,6 +42,9 @@ export {
   checkScopes,
   getServerSession,
   requireAuth,
+  requireServerSession,
+  isLatchSession,
+  checkLatchHealth,
 } from './helpers';
 
 // Crypto

@@ -1642,12 +1642,137 @@ type LatchErrorCode =
 
 ### `LatchSession`
 
+The session object returned by `getServerSession()` and `requireServerSession()`:
+
 ```typescript
 interface LatchSession {
-  user: LatchUser | null;
-  isAuthenticated: boolean;
+  user: LatchUser | null;         // User data from ID token (null if not authenticated)
+  isAuthenticated: boolean;       // True if user has valid session
 }
 ```
+
+### `LatchUser`
+
+User data from Azure AD ID token:
+
+```typescript
+interface LatchUser {
+  sub: string;                    // Azure AD object ID (unique identifier)
+  oid: string;                    // Same as sub (Azure AD OID claim)
+  email?: string;                 // User email
+  name?: string;                  // User display name
+  preferred_username?: string;    // Usually the email
+  iat: number;                    // Issued at timestamp
+  exp: number;                    // Expiration timestamp
+  // ... other Azure AD claims from ID token
+}
+```
+
+## Session Usage Patterns
+
+### ✅ Correct Usage
+
+```typescript
+// In API route or Server Component
+import { getServerSession } from '@lance0/latch';
+
+const session = await getServerSession(process.env.LATCH_COOKIE_SECRET!);
+
+if (session.isAuthenticated && session.user) {
+  // ✓ Access user properties through session.user
+  console.log(session.user.sub);    // User ID
+  console.log(session.user.email);  // User email
+  console.log(session.user.name);   // User name
+}
+```
+
+```typescript
+// Using requireServerSession helper
+import { requireServerSession } from '@lance0/latch';
+
+export async function GET() {
+  try {
+    const session = await requireServerSession(process.env.LATCH_COOKIE_SECRET!);
+    // ✓ session.user is guaranteed to exist - no null checks needed
+    return Response.json({ userId: session.user.sub });
+  } catch (error) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+}
+```
+
+```typescript
+// Using type guard
+import { getServerSession, isLatchSession } from '@lance0/latch';
+
+const session = await getServerSession(secret);
+
+if (isLatchSession(session)) {
+  // ✓ TypeScript knows session.user is LatchUser (not null)
+  console.log(session.user.sub);
+}
+```
+
+### ❌ Wrong Usage
+
+```typescript
+const session = await getServerSession(secret);
+
+// ❌ Properties are NOT on session directly - they're on session.user
+if (session) {
+  console.log(session.sub);       // undefined
+  console.log(session.email);     // undefined
+  console.log(session.idToken);   // undefined - this property doesn't exist
+}
+```
+
+### Session Validation in proxy.ts
+
+When validating sessions in Next.js 16 proxy.ts, check `session.sub`:
+
+```typescript
+// ✅ Correct - check sub claim
+import { COOKIE_NAMES, unseal } from '@lance0/latch';
+
+const cookie = request.cookies.get(COOKIE_NAMES.ID_TOKEN)?.value;
+const session = await unseal(cookie, secret) as any;
+
+if (!session || !session.sub) {  // ✓ Check 'sub' from ID token claims
+  return NextResponse.redirect(new URL('/', request.url));
+}
+```
+
+```typescript
+// ❌ Wrong - idToken property doesn't exist
+if (!session || !session.idToken) {  // ✗ This property doesn't exist!
+  return NextResponse.redirect(new URL('/', request.url));
+}
+```
+
+## Cookie Names
+
+Latch uses three encrypted cookies. Always use `COOKIE_NAMES` constants:
+
+```typescript
+import { COOKIE_NAMES } from '@lance0/latch';
+
+// Cookie name constants
+COOKIE_NAMES.ID_TOKEN       // → 'latch_id'      (User session, ~300 bytes)
+COOKIE_NAMES.REFRESH_TOKEN  // → 'latch_rt'      (Refresh token, ~2700 bytes)
+COOKIE_NAMES.PKCE_DATA      // → 'latch_pkce'    (OAuth flow, ~250 bytes, temporary)
+
+// ✅ Always use constants
+const cookie = request.cookies.get(COOKIE_NAMES.ID_TOKEN);
+
+// ❌ Never hardcode (names might change between versions)
+const cookie = request.cookies.get('latch_id');
+```
+
+**Why use constants:**
+- Cookie names might change between versions
+- Constants ensure consistency across your codebase
+- TypeScript autocomplete works better
+- Prevents typos
 
 ### `UseAccessTokenOptions`
 
