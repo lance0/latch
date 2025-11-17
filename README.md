@@ -24,12 +24,14 @@ latch/
 ## Features
 
 - ✅ **PKCE S256** (no client secrets needed)
-- ✅ **HttpOnly encrypted cookies** (AES-GCM)
+- ✅ **HttpOnly encrypted cookies** (AES-GCM with PBKDF2 key caching)
 - ✅ **Azure Government cloud support** (GCC-High, DoD)
-- ✅ **Next.js 15 App Router** native
-- ✅ **Server Actions** support with `getServerSession()` and `requireAuth()`
+- ✅ **Next.js 15+ App Router** native
+- ✅ **Server Actions** support with `getServerSession()`, `requireAuth()`, and more
+- ✅ **Automatic token refresh** - Sessions last 7 days without interruption
+- ✅ **Enhanced CLI** - Scaffold proxy.ts, auth wrappers, and routes
 - ✅ **Token confusion attack prevention** - Strict issuer/tenant validation
-- ✅ **TypeScript-first** with full IntelliSense
+- ✅ **TypeScript-first** with full IntelliSense and type guards
 - ✅ **Audit-friendly** and transparent
 - ✅ **Configurable security** - Clock skew, JWKS cache TTL
 - ✅ **Two modes:** Secure Proxy (default) or Direct Token
@@ -391,8 +393,11 @@ export async function getProfile() {
 **Available helpers:**
 - `getServerSession(cookieSecret)` - Get current session (handles unauthenticated)
 - `requireAuth(cookieSecret)` - Require authentication (throws if not authenticated)
+- `requireServerSession(cookieSecret)` - Get session or throw (TypeScript-friendly, guarantees user exists)
+- `isLatchSession(session)` - Type guard for session validation
+- `checkLatchHealth()` - Validate Latch configuration (for health checks)
 
-**See the full guide:** [Server Actions Documentation](./docs/SERVER_ACTIONS.md)
+**See the full guide:** [Server Actions Documentation](./docs/SERVER_ACTIONS.md) and [API Reference](./docs/API_REFERENCE.md)
 
 ## API Routes
 
