@@ -91,7 +91,22 @@ LATCH_SCOPES=openid profile User.Read
 LATCH_CLOCK_SKEW_TOLERANCE=60    # seconds, default: 60
 LATCH_JWKS_CACHE_TTL=3600         # seconds, default: 3600
 LATCH_REDIRECT_URI=http://localhost:3000/api/latch/callback
-LATCH_COOKIE_SECRET=$(openssl rand -base64 32)
+
+# Cookie secret - choose ONE method:
+LATCH_COOKIE_SECRET=$(openssl rand -base64 32)              # ✅ Most systems
+# LATCH_COOKIE_SECRET=$(npx @lance0/latch-cli generate-secret)  # ✅ Cross-platform
+```
+
+**⚠️ Cookie Secret Generation:**
+```bash
+# Method 1: OpenSSL (Linux/Mac/WSL)
+echo "LATCH_COOKIE_SECRET=$(openssl rand -base64 32)" >> .env.local
+
+# Method 2: CLI tool (Cross-platform)
+npx @lance0/latch-cli generate-secret >> .env.local
+
+# Method 3: Manual (if above fail)
+# Generate a 32+ character random string and paste it
 ```
 
 **Cloud options:**
@@ -224,7 +239,15 @@ export default function Home() {
   const { user, isAuthenticated, signIn, signOut } = useLatch();
 
   if (!isAuthenticated) {
-    return <button onClick={() => signIn()}>Sign In</button>;
+    return (
+      <div>
+        {/* ⚠️ IMPORTANT: Use <a> tag, NOT Next.js <Link> for auth endpoints */}
+        {/* <Link> causes CORS issues with /api/latch/start */}
+        <a href="/api/latch/start">Sign In</a>
+        {/* OR use the signIn() function: */}
+        <button onClick={() => signIn()}>Sign In with Button</button>
+      </div>
+    );
   }
 
   return (
@@ -268,6 +291,71 @@ Check out the pre-configured examples for your cloud:
 - **[example-app](./apps/example-app/)** - Generic (configurable)
 
 See [apps/README.md](./apps/README.md) for detailed comparison.
+
+## TypeScript Support
+
+Latch is TypeScript-first with full IntelliSense support.
+
+### Key Type Exports
+
+```typescript
+import type { 
+  LatchSession,    // Session object from getServerSession()
+  LatchUser,       // User data from Azure AD ID token
+  LatchConfig,     // Configuration object
+} from '@lance0/latch';
+
+// Client-side hook
+import { useLatch } from '@lance0/latch/react';
+```
+
+### Understanding Session Structure
+
+```typescript
+// ✅ LatchSession - What getServerSession() returns
+interface LatchSession {
+  isAuthenticated: boolean;      // Whether user is logged in
+  user: LatchUser | null;        // User data (null if not authenticated)
+}
+
+// ✅ LatchUser - Actual user data from Azure AD
+interface LatchUser {
+  sub: string;                   // Unique user ID (Azure AD object ID)
+  email?: string;                // User's email
+  name?: string;                 // Display name
+  preferred_username?: string;   // Usually same as email
+  // ... other Azure AD claims
+}
+```
+
+**Common TypeScript patterns:**
+
+```typescript
+// ❌ Wrong - properties are on session.user, not session directly
+const session = await getServerSession(secret);
+if (session.isAuthenticated) {
+  console.log(session.email);  // undefined!
+}
+
+// ✅ Correct - access user data through session.user
+const session = await getServerSession(secret);
+if (session.isAuthenticated && session.user) {
+  console.log(session.user.email);  // ✓ Works
+}
+
+// ✅ Even better - use type guard or requireServerSession
+import { isLatchSession, requireServerSession } from '@lance0/latch';
+
+// Option 1: Type guard
+if (isLatchSession(session)) {
+  // TypeScript knows session.user exists
+  console.log(session.user.email);
+}
+
+// Option 2: Require helper
+const session = await requireServerSession(secret); // Throws if not authenticated
+console.log(session.user.email); // TypeScript knows user exists
+```
 
 ### 10. Protect routes
 
@@ -437,6 +525,54 @@ pnpm lint
 # Build
 pnpm build
 ```
+
+## Common DX Issues
+
+### "Cannot find useLatch hook"
+```typescript
+// ❌ Wrong import
+import { useLatch } from '@lance0/latch';
+
+// ✅ Correct import
+import { useLatch } from '@lance0/latch/react';
+```
+
+### "Session properties are undefined"
+```typescript
+// ❌ Wrong - properties are on session.user
+const session = await getServerSession(secret);
+console.log(session.email); // undefined
+
+// ✅ Correct
+console.log(session.user?.email);
+```
+
+### "Link component doesn't work for sign in"
+```tsx
+// ❌ Wrong - causes CORS issues
+import Link from 'next/link';
+<Link href="/api/latch/start">Sign In</Link>
+
+// ✅ Correct - use regular anchor tag
+<a href="/api/latch/start">Sign In</a>
+// OR use the signIn() function from useLatch()
+```
+
+### "Cookie secret generation fails"
+```bash
+# If openssl fails, use the CLI:
+npx @lance0/latch-cli generate-secret
+
+# Or manually generate a 32+ character string
+```
+
+### "Can't find TypeScript types"
+All types are exported from the main package:
+```typescript
+import type { LatchSession, LatchUser } from '@lance0/latch';
+```
+
+See [TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) for more issues.
 
 ## Migrating to Latch
 
